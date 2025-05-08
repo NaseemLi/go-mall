@@ -11,6 +11,7 @@ type CouponModel struct {
 	StartTime    *time.Time `json:"startTime"`    //开始时间
 	EndTime      *time.Time `json:"endTime"`      //结束时间
 	Num          int        `json:"num"`          //优惠卷数量
+	Receive      int        `json:"receive"`      //领取数量
 	Push         int8       `json:"push"`         //推广方式
 	GoodsID      *uint      `json:"goodsID"`      //关联的商品
 	GoodCategory *string    `json:"goodCategory"` //关联的商品分类
