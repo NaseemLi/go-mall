@@ -1,5 +1,6 @@
 .idea
 settings_*.yaml
+settings.yaml
 logs
 uploads
 testdata

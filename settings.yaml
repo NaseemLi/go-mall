@@ -1,12 +1,12 @@
 db:
-  mode: # mysql pgsql sqlite ""
-  db_name: fast_db
+  mode: mysql # mysql pgsql sqlite ""
+  db_name: mall_db
   host: 127.0.0.1
   port: 3306
   user: root
-  password: root
+  password: 123456
 redis:
-  addr: ""
+  addr: 127.0.0.1:6379
   password: ""
   db: 1
 system:
