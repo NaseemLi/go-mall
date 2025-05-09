@@ -40,6 +40,7 @@ func AdminMiddleware(c *gin.Context) {
 		c.Abort()
 		return
 	}
+
 	if claims.RoleID != ctype.AdminRole {
 		res.FailWithMsg("角色认证失败", c)
 		c.Abort()
@@ -56,5 +57,8 @@ func GetAuth(c *gin.Context) (cl *jwts.MyClaims) {
 		return
 	}
 	cl, ok = _claims.(*jwts.MyClaims)
-	return
+	if !ok {
+		return
+	}
+	return cl
 }
