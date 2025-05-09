@@ -21,6 +21,14 @@ func UserRouter(g *gin.RouterGroup) {
 		middleware.AuthMiddleware,
 		middleware.BindJsonMiddleware[user_api.UpdatePwdRequest],
 		app.UpdatePwdView)
+	g.PUT("users/info/admin",
+		middleware.AdminMiddleware,
+		middleware.BindJsonMiddleware[user_api.AdminUpdateInfoRequest],
+		app.AdminUpdateInfoView)
+	g.PUT("users/info",
+		middleware.AuthMiddleware,
+		middleware.BindJsonMiddleware[user_api.UpdateInfoRequest],
+		app.UpdateInfoView)
 	g.GET("users/detail",
 		middleware.AuthMiddleware,
 		app.UserDetailView)
