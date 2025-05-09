@@ -8,6 +8,7 @@ import (
 	"fast_gin/utils/jwts"
 	"fast_gin/utils/pwd"
 	"fast_gin/utils/res"
+
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
@@ -56,5 +57,4 @@ func (UserApi) LoginView(c *gin.Context) {
 	}
 
 	res.OkWithData(token, c)
-	return
 }

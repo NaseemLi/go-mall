@@ -22,4 +22,4 @@ upload:
   dir: images
 site:
   login:
-    captcha: true
+    captcha: false

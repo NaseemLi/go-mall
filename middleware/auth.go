@@ -1,9 +1,11 @@
 package middleware
 
 import (
+	"fast_gin/models/ctype"
 	"fast_gin/service/redis_ser"
 	"fast_gin/utils/jwts"
 	"fast_gin/utils/res"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -36,7 +38,7 @@ func AdminMiddleware(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	if claims.RoleID != 1 {
+	if claims.RoleID != ctype.AdminRole {
 		res.FailWithMsg("角色认证失败", c)
 		c.Abort()
 		return

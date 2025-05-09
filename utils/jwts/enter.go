@@ -3,14 +3,16 @@ package jwts
 import (
 	"errors"
 	"fast_gin/global"
+	"fast_gin/models/ctype"
+	"time"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/sirupsen/logrus"
-	"time"
 )
 
 type Claims struct {
-	UserID uint `json:"userID"`
-	RoleID int8 `json:"roleID"`
+	UserID uint       `json:"userID"`
+	RoleID ctype.Role `json:"roleID"`
 }
 
 type MyClaims struct {

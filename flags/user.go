@@ -3,11 +3,13 @@ package flags
 import (
 	"fast_gin/global"
 	"fast_gin/models"
+	"fast_gin/models/ctype"
 	"fast_gin/utils/pwd"
 	"fmt"
+	"os"
+
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh/terminal"
-	"os"
 )
 
 type User struct {
@@ -21,7 +23,7 @@ func (User) Create() {
 		fmt.Println("输入错误", err)
 		return
 	}
-	if user.RoleID != 1 && user.RoleID != 2 {
+	if user.RoleID != ctype.AdminRole && user.RoleID != ctype.UserRole {
 		fmt.Println("用户角色输入错误", err)
 		return
 	}
