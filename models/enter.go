@@ -16,3 +16,11 @@ type PageInfo struct {
 	Key   string `form:"key"`
 	Order string `form:"order"`
 }
+
+type IDRequest struct {
+	ID uint `json:"id" uri:"id" form:"id"`
+}
+
+type IDListRequest struct {
+	IDList []uint `json:"idList"`
+}

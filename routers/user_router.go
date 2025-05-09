@@ -40,4 +40,8 @@ func UserRouter(g *gin.RouterGroup) {
 	g.POST("users/logout",
 		middleware.AuthMiddleware,
 		app.LogoutView)
+	g.DELETE("users",
+		middleware.AdminMiddleware,
+		middleware.BindJsonMiddleware[models.IDListRequest],
+		app.UserRemoveView)
 }
