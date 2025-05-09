@@ -17,6 +17,9 @@ func UserRouter(g *gin.RouterGroup) {
 	g.POST("users/register",
 		middleware.BindJsonMiddleware[user_api.RegisterRequest],
 		app.RegisterView)
+	g.GET("users/detail",
+		middleware.AuthMiddleware,
+		app.UserDetailView)
 	g.GET("users",
 		middleware.LimitMiddleware(10),
 		middleware.AdminMiddleware,

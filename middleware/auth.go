@@ -11,7 +11,7 @@ import (
 
 func AuthMiddleware(c *gin.Context) {
 	token := c.GetHeader("token")
-	_, err := jwts.CheckToken(token)
+	claims, err := jwts.CheckToken(token)
 	if err != nil {
 		res.FailWithMsg("认证失败", c)
 		c.Abort()
@@ -22,6 +22,8 @@ func AuthMiddleware(c *gin.Context) {
 		c.Abort()
 		return
 	}
+
+	c.Set("claims", claims)
 	c.Next()
 }
 
