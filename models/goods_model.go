@@ -1,27 +1,28 @@
 package models
 
 import (
+	"fast_gin/models/ctype"
+
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
 type GoodsModel struct {
 	Model
-	Title            string            `gorm:"size:64" json:"title"`
-	VideoPath        *string           `gorm:"size:256" json:"videoPath"`
-	Images           []string          `gorm:"type:longtext;serializer:json" json:"images"`          //主图
-	Price            int               `json:"price"`                                                //价格单位:分
-	Inventory        *int              `json:"inventory"`                                            //库存
-	Category         string            `json:"category"`                                             //分类
-	Abstract         string            `json:"abstract"`                                             //商品简介
-	GoodsConfigList  []GoodsConfig     `gorm:"type:longtext;serializer:json" json:"goodsConfigList"` //商品配置
-	SecKill          bool              `json:"secKill"`                                              //是否参与秒杀
-	Coupon           bool              `json:"coupon"`                                               //是否开启优惠券
-	Status           int8              `json:"status"`                                               //商品状态
-	LookCount        int               `json:"lookCount"`                                            //浏览量
-	CommentCount     int               `json:"commentCount"`                                         //评论数
-	UserBuyGoodsList []OrderGoodsModel `gorm:"foreignKey:GoodsID" json:"-"`                          //购买的次数
-	SalesNum         int               `json:"salesNum"`                                             //销量
+	Title           string        `gorm:"size:64" json:"title"`
+	VideoPath       *string       `gorm:"size:256" json:"videoPath"`
+	Images          []string      `gorm:"type:longtext;serializer:json" json:"images"`          //主图
+	Price           int           `json:"price"`                                                //价格单位:分
+	Inventory       *int          `json:"inventory"`                                            //库存
+	Category        string        `json:"category"`                                             //分类
+	Abstract        string        `json:"abstract"`                                             //商品简介
+	GoodsConfigList []GoodsConfig `gorm:"type:longtext;serializer:json" json:"goodsConfigList"` //商品配置
+	// SecKill          bool              `json:"secKill"`                                              //是否参与秒杀
+	// Coupon           bool              `json:"coupon"`                                               //是否开启优惠券
+	Status       ctype.GoodsStatusType `json:"status"`       //商品状态
+	LookCount    int                   `json:"lookCount"`    //浏览量
+	CommentCount int                   `json:"commentCount"` //评论数ßßßßßßßß
+	SalesNum     int                   `json:"salesNum"`     //销量
 }
 
 type GoodsConfig struct {
