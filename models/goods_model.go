@@ -21,6 +21,7 @@ type GoodsModel struct {
 	LookCount        int               `json:"lookCount"`                                            //浏览量
 	CommentCount     int               `json:"commentCount"`                                         //评论数
 	UserBuyGoodsList []OrderGoodsModel `gorm:"foreignKey:GoodsID" json:"-"`                          //购买的次数
+	SalesNum         int               `json:"salesNum"`                                             //销量
 }
 
 type GoodsConfig struct {
