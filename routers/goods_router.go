@@ -49,4 +49,8 @@ func GoodsRouter(g *gin.RouterGroup) {
 	g.GET("goods/category",
 		app.GoodsCategoryListView,
 	)
+	g.GET("goods/options/admin",
+		middleware.AdminMiddleware,
+		app.GoodsOptionsListView,
+	)
 }
