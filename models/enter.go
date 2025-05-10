@@ -24,3 +24,8 @@ type IDRequest struct {
 type IDListRequest struct {
 	IDList []uint `json:"idList"`
 }
+
+type LabelResponse[T string | uint] struct {
+	Label string `json:"label"`
+	Value T      `json:"value"`
+}

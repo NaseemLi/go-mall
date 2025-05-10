@@ -39,4 +39,14 @@ func GoodsRouter(g *gin.RouterGroup) {
 		middleware.BindUriMiddleware[models.IDRequest],
 		app.GoodsDetailView,
 	)
+
+	g.PUT("goods/status",
+		middleware.AdminMiddleware,
+		middleware.BindJsonMiddleware[goodsapi.GoodsStatusUpdateRequest],
+		app.GoodsStatusUpdateView,
+	)
+
+	g.GET("goods/category",
+		app.GoodsCategoryListView,
+	)
 }
