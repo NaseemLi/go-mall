@@ -28,4 +28,10 @@ func GoodsRouter(g *gin.RouterGroup) {
 		middleware.BindJsonMiddleware[models.IDListRequest],
 		app.GoodsRemoveView,
 	)
+
+	g.PUT("goods",
+		middleware.AdminMiddleware,
+		middleware.BindJsonMiddleware[goodsapi.GoodsUpdateRequest],
+		app.GoodsUpdateView,
+	)
 }
