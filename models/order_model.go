@@ -15,6 +15,8 @@ type OrderModel struct {
 
 type OrderGoodsModel struct {
 	Model
+	UserID     uint       `json:"userID"`
+	UserModel  UserModel  `gorm:"foreignKey:UserID" json:"-"`
 	OrderID    uint       `json:"orderID"`
 	OrderModel OrderModel `gorm:"foreignKey:OrderID" json:"-"`
 	GoodsID    uint       `json:"goodsID"`

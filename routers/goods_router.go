@@ -15,4 +15,10 @@ func GoodsRouter(g *gin.RouterGroup) {
 		middleware.BindJsonMiddleware[goodsapi.GoodsAddRequest],
 		app.GoodsAddView,
 	)
+
+	g.GET("goods/admin",
+		middleware.AdminMiddleware,
+		middleware.BindQueryMiddleware[goodsapi.GoodsListRequest],
+		app.GoodsListView,
+	)
 }

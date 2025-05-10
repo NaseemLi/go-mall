@@ -113,7 +113,7 @@ func (GoodsApi) GoodsAddView(c *gin.Context) {
 		Category:        cr.Category,
 		Abstract:        cr.Abstract,
 		GoodsConfigList: cr.GoodsConfigList,
-		Seckill:         cr.Seckill,
+		SecKill:         cr.Seckill,
 		Coupon:          cr.Coupon,
 	}
 	err = global.DB.Create(&model).Error

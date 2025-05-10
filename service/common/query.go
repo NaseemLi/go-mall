@@ -4,6 +4,7 @@ import (
 	"fast_gin/global"
 	"fast_gin/models"
 	"fmt"
+
 	"gorm.io/gorm"
 )
 
@@ -29,6 +30,11 @@ func QueryList[T any](model T, option QueryOption) (list []T, count int64, err e
 			}
 			query.Where(likeQuery)
 		}
+	}
+
+	//高级查询
+	if option.Where != nil {
+		query = query.Where(option.Where)
 	}
 
 	// 预加载
