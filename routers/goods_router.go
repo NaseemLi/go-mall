@@ -53,4 +53,9 @@ func GoodsRouter(g *gin.RouterGroup) {
 		middleware.AdminMiddleware,
 		app.GoodsOptionsListView,
 	)
+
+	g.GET("goods/index",
+		middleware.BindQueryMiddleware[goodsapi.GoodsIndexListRequest],
+		app.GoodsIndexListView,
+	)
 }
