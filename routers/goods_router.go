@@ -4,6 +4,7 @@ import (
 	"fast_gin/api"
 	goodsapi "fast_gin/api/goods_api"
 	"fast_gin/middleware"
+	"fast_gin/models"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,5 +21,11 @@ func GoodsRouter(g *gin.RouterGroup) {
 		middleware.AdminMiddleware,
 		middleware.BindQueryMiddleware[goodsapi.GoodsListRequest],
 		app.GoodsListView,
+	)
+
+	g.DELETE("goods/admin",
+		middleware.AdminMiddleware,
+		middleware.BindJsonMiddleware[models.IDListRequest],
+		app.GoodsRemoveView,
 	)
 }
