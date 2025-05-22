@@ -2,20 +2,17 @@ package models
 
 import (
 	"fast_gin/models/ctype"
-	"time"
 )
 
 type CouponModel struct {
 	Model
-	Title        string           `json:"title"`        //优惠券名称
-	Type         ctype.CouponType `json:"type"`         //优惠券类型
-	CouponPrice  int              `json:"couponPrice"`  //优惠券金额
-	Threshold    int              `json:"threshold"`    //使用门槛
-	StartTime    *time.Time       `json:"startTime"`    //开始时间
-	EndTime      *time.Time       `json:"endTime"`      //结束时间
-	Num          int              `json:"num"`          //优惠卷数量
-	Receive      int              `json:"receive"`      //领取数量
-	Push         int8             `json:"push"`         //推广方式
-	GoodsID      *uint            `json:"goodsID"`      //关联的商品
-	GoodCategory *string          `json:"goodCategory"` //关联的商品分类
+	Title       string           `json:"title"`       //优惠券名称
+	Type        ctype.CouponType `json:"type"`        //优惠券类型
+	CouponPrice int              `json:"couponPrice"` //优惠券金额
+	Threshold   int              `json:"threshold"`   //使用门槛
+	Validity    int              `json:"validity"`    //有效期 单位小时
+	Num         int              `json:"num"`         //优惠卷数量
+	Receive     int              `json:"receive"`     //领取数量
+	GoodsID     *uint            `json:"goodsID"`     //关联的商品
+	Festival    *string          `json:"festival"`    //节日活动
 }

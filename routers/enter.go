@@ -18,6 +18,7 @@ func Run() {
 	ImageRouter(g)
 	CaptchaRouter(g)
 	GoodsRouter(g)
+	CouponRouter(g)
 
 	addr := global.Config.System.Addr()
 	if global.Config.System.Mode == "release" {
