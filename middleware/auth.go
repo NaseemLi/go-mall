@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"fast_gin/global"
+	"fast_gin/models"
 	"fast_gin/models/ctype"
 	"fast_gin/service/redis_ser"
 	"fast_gin/utils/jwts"
@@ -61,4 +63,13 @@ func GetAuth(c *gin.Context) (cl *jwts.MyClaims) {
 		return
 	}
 	return cl
+}
+
+func GetUser(c *gin.Context) (user models.UserModel, err error) {
+	cl := GetAuth(c)
+	if cl == nil {
+		return
+	}
+	err = global.DB.First(&user, cl.UserID).Error
+	return
 }
