@@ -9,11 +9,8 @@ import (
 	"fast_gin/utils/pwd"
 	"fast_gin/utils/random"
 	"fast_gin/utils/res"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
-	"gorm.io/gorm"
 )
 
 type RegisterRequest struct {
@@ -60,26 +57,26 @@ func (UserApi) RegisterView(c *gin.Context) {
 		return
 	}
 
-	//判断是否有新用户优惠卷
-	var couponList []models.CouponModel
-	global.DB.Find(&couponList, "`type` = ? and `receive` != `num`", ctype.CouponNewUserType)
-	if len(couponList) > 0 {
-		//给用户发优惠卷
-		var userCouponList []models.UserCouponModel
-		for _, couponModel := range couponList {
-			userCouponList = append(userCouponList, models.UserCouponModel{
-				UserID:   user.ID,
-				CouponID: couponModel.ID,
-				Status:   ctype.CouponStatusNotUsed,
-				EndTime:  time.Now().Add(time.Duration(couponModel.Validity) * time.Hour),
-			})
-		}
-		if len(userCouponList) > 0 {
-			global.DB.Create(&userCouponList)
-			//增加对应新用户优惠卷数量
-			global.DB.Model(&couponList).Update("receive", gorm.Expr("receive + 1"))
-			logrus.Infof("添加用户优惠卷成功, 创建了 %d 张优惠卷", len(userCouponList))
-		}
-	}
+	// //判断是否有新用户优惠卷
+	// var couponList []models.CouponModel
+	// global.DB.Find(&couponList, "`type` = ? and `receive` != `num`", ctype.CouponNewUserType)
+	// if len(couponList) > 0 {
+	// 	//给用户发优惠卷
+	// 	var userCouponList []models.UserCouponModel
+	// 	for _, couponModel := range couponList {
+	// 		userCouponList = append(userCouponList, models.UserCouponModel{
+	// 			UserID:   user.ID,
+	// 			CouponID: couponModel.ID,
+	// 			Status:   ctype.CouponStatusNotUsed,
+	// 			EndTime:  time.Now().Add(time.Duration(couponModel.Validity) * time.Hour),
+	// 		})
+	// 	}
+	// 	if len(userCouponList) > 0 {
+	// 		global.DB.Create(&userCouponList)
+	// 		//增加对应新用户优惠卷数量
+	// 		global.DB.Model(&couponList).Update("receive", gorm.Expr("receive + 1"))
+	// 		logrus.Infof("添加用户优惠卷成功, 创建了 %d 张优惠卷", len(userCouponList))
+	// 	}
+	// }
 	res.OkWithMsg("注册成功", c)
 }

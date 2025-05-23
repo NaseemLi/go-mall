@@ -34,6 +34,10 @@ func (CouponApi) UserReceiveCouponView(c *gin.Context) {
 		res.FailWithMsg("优惠卷不存在", c)
 		return
 	}
+	if coupon.Type == ctype.CouponNewGoodsType {
+		res.FailWithMsg("新商品优惠卷不可领取", c)
+		return
+	}
 
 	//加锁解决并发问题
 	mutex.Lock()

@@ -28,9 +28,12 @@ func (CouponApi) CouponUserAcceptableListView(c *gin.Context) {
 
 	query := global.DB.Where("`type` in ?", []ctype.CouponType{
 		ctype.CouponFestivalType,
+		ctype.CouponNewUserType,
 		ctype.CouponGoodsType,
 		ctype.CouponGeneralType,
 	})
+
+	query = query.Where("num != receive")
 
 	//把用户领取过的优惠卷过滤掉
 	_list, count, _ := common.QueryList(models.CouponModel{}, common.QueryOption{
