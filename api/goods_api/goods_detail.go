@@ -4,6 +4,7 @@ import (
 	"fast_gin/global"
 	"fast_gin/middleware"
 	"fast_gin/models"
+	"fast_gin/models/ctype"
 	"fast_gin/utils/jwts"
 	"fast_gin/utils/res"
 
@@ -11,6 +12,7 @@ import (
 )
 
 type GoodsDetailCoupon struct {
+	CouponID    uint `json:"couponId"`    //优惠券ID
 	CouponPrice int  `json:"couponPrice"` //优惠券金额
 	Threshold   int  `json:"threshold"`   //使用门槛
 	IsReceive   bool `json:"isReceive"`   //是否领取
@@ -40,7 +42,32 @@ func (GoodsApi) GoodsDetailView(c *gin.Context) {
 	//判断用户是否登录
 	token := c.GetHeader("token")
 	claims, err := jwts.CheckToken(token)
+	if err != nil {
+		//未登录
+		res.FailWithMsg("请登录", c)
+		return
+	}
+
 	//查这个商品是否有优惠券
+	var coupon models.CouponModel
+	err = global.DB.Take(&coupon, "`type` = ? and `goods_id` = ?", ctype.CouponGoodsType, cr.ID).Error
+	if err == nil {
+		//有优惠卷
+		data.GoodsDetailCoupon = &GoodsDetailCoupon{
+			CouponID:    coupon.ID,
+			CouponPrice: coupon.CouponPrice,
+			Threshold:   coupon.Threshold,
+		}
+
+		if claims != nil {
+			var userCoupon models.UserCouponModel
+			err = global.DB.Take(&userCoupon, "user_id = ? and coupon_id = ?", claims.UserID, coupon.ID).Error
+			if err == nil {
+				data.GoodsDetailCoupon.IsReceive = true
+			}
+		}
+	}
+
 	if err == nil && claims != nil {
 		// 用户登录
 		var userCollect models.CollectModel
