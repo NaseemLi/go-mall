@@ -19,4 +19,8 @@ func CouponRouter(g *gin.RouterGroup) {
 		middleware.AdminMiddleware,
 		middleware.BindQueryMiddleware[models.PageInfo],
 		app.CouponListView)
+	g.DELETE("coupon",
+		middleware.AdminMiddleware,
+		middleware.BindJsonMiddleware[models.IDListRequest],
+		app.CouponRemoveView)
 }
