@@ -70,6 +70,7 @@ func (UserApi) RegisterView(c *gin.Context) {
 			userCouponList = append(userCouponList, models.UserCouponModel{
 				UserID:   user.ID,
 				CouponID: couponModel.ID,
+				Status:   ctype.CouponStatusNotUsed,
 				EndTime:  time.Now().Add(time.Duration(couponModel.Validity) * time.Hour),
 			})
 		}

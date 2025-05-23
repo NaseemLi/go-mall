@@ -31,4 +31,8 @@ func CouponRouter(g *gin.RouterGroup) {
 		middleware.AuthMiddleware,
 		middleware.BindJsonMiddleware[couponapi.UserReceiveCouponRequest],
 		app.UserReceiveCouponView)
+	g.GET("coupon/user",
+		middleware.AuthMiddleware,
+		middleware.BindQueryMiddleware[couponapi.UserCouponListRequest],
+		app.UserCouponListView)
 }

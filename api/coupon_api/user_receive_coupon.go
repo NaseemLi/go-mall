@@ -4,6 +4,7 @@ import (
 	"fast_gin/global"
 	"fast_gin/middleware"
 	"fast_gin/models"
+	"fast_gin/models/ctype"
 	"fast_gin/utils/res"
 	"sync"
 	"time"
@@ -54,6 +55,7 @@ func (CouponApi) UserReceiveCouponView(c *gin.Context) {
 		err = tx.Create(&models.UserCouponModel{
 			UserID:   user.ID,
 			CouponID: cr.CouponID,
+			Status:   ctype.CouponStatusNotUsed,
 			EndTime:  time.Now().Add(time.Duration(coupon.Validity) * time.Hour),
 		}).Error
 		if err != nil {
