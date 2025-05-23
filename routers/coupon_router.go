@@ -4,6 +4,7 @@ import (
 	"fast_gin/api"
 	couponapi "fast_gin/api/coupon_api"
 	"fast_gin/middleware"
+	"fast_gin/models"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,4 +15,8 @@ func CouponRouter(g *gin.RouterGroup) {
 		middleware.AdminMiddleware,
 		middleware.BindJsonMiddleware[couponapi.CouponCreateRequest],
 		app.CouponCreateView)
+	g.GET("coupon",
+		middleware.AdminMiddleware,
+		middleware.BindQueryMiddleware[models.PageInfo],
+		app.CouponListView)
 }
