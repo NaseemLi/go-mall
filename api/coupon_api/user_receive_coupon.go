@@ -5,14 +5,18 @@ import (
 	"fast_gin/middleware"
 	"fast_gin/models"
 	"fast_gin/utils/res"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type UserReceiveCouponRequest struct {
-	CouponID uint `json:"couponID"`
+	CouponID uint `json:"couponID" binding:"required"`
 }
+
+var mutex sync.Mutex
 
 func (CouponApi) UserReceiveCouponView(c *gin.Context) {
 	cr := middleware.GetBind[UserReceiveCouponRequest](c)
@@ -30,6 +34,10 @@ func (CouponApi) UserReceiveCouponView(c *gin.Context) {
 		return
 	}
 
+	//加锁解决并发问题
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	if coupon.Receive == coupon.Num {
 		res.FailWithMsg("优惠卷已经被领取完了", c)
 	}
@@ -40,13 +48,28 @@ func (CouponApi) UserReceiveCouponView(c *gin.Context) {
 		return
 	}
 
-	global.DB.Create(&models.UserCouponModel{
-		UserID:   user.ID,
-		CouponID: cr.CouponID,
-		EndTime:  time.Now().Add(time.Duration(coupon.Validity) * time.Hour),
+	//原子性问题
+	err = global.DB.Transaction(func(tx *gorm.DB) error {
+
+		err = tx.Create(&models.UserCouponModel{
+			UserID:   user.ID,
+			CouponID: cr.CouponID,
+			EndTime:  time.Now().Add(time.Duration(coupon.Validity) * time.Hour),
+		}).Error
+		if err != nil {
+			return err
+		}
+		//增加领取数
+		err = tx.Model(&coupon).Where("id = ?", cr.CouponID).Update("receive", gorm.Expr("receive + 1")).Error
+		if err != nil {
+			return err
+		}
+		return nil
 	})
-	//增加领取数
-	global.DB.Model(&coupon).Where("id = ?", cr.CouponID).Update("receive", coupon.Receive+1)
+	if err != nil {
+		res.FailWithMsg("领取失败", c)
+		return
+	}
 
 	res.OkWithMsg("领取成功", c)
 }

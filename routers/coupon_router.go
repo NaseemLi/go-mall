@@ -23,7 +23,12 @@ func CouponRouter(g *gin.RouterGroup) {
 		middleware.AdminMiddleware,
 		middleware.BindJsonMiddleware[models.IDListRequest],
 		app.CouponRemoveView)
+
 	g.GET("coupon/acceptable",
 		middleware.BindQueryMiddleware[models.PageInfo],
 		app.CouponUserAcceptableListView)
+	g.POST("coupon/receive",
+		middleware.AuthMiddleware,
+		middleware.BindJsonMiddleware[couponapi.UserReceiveCouponRequest],
+		app.UserReceiveCouponView)
 }

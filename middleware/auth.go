@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"fast_gin/global"
 	"fast_gin/models"
 	"fast_gin/models/ctype"
@@ -66,10 +67,11 @@ func GetAuth(c *gin.Context) (cl *jwts.MyClaims) {
 }
 
 func GetUser(c *gin.Context) (user models.UserModel, err error) {
-	cl := GetAuth(c)
-	if cl == nil {
+	claims := GetAuth(c)
+	if claims == nil || claims.UserID == 0 {
+		err = errors.New("用户信息非法")
 		return
 	}
-	err = global.DB.First(&user, cl.UserID).Error
+	err = global.DB.First(&user, claims.UserID).Error
 	return
 }
