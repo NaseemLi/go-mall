@@ -9,6 +9,7 @@ import (
 	"fast_gin/utils/pwd"
 	"fast_gin/utils/random"
 	"fast_gin/utils/res"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -69,6 +70,7 @@ func (UserApi) RegisterView(c *gin.Context) {
 			userCouponList = append(userCouponList, models.UserCouponModel{
 				UserID:   user.ID,
 				CouponID: couponModel.ID,
+				EndTime:  time.Now().Add(time.Duration(couponModel.Validity) * time.Hour),
 			})
 		}
 		if len(userCouponList) > 0 {
