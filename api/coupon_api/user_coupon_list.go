@@ -8,8 +8,10 @@ import (
 	"fast_gin/service/common"
 	"fast_gin/utils/jwts"
 	"fast_gin/utils/res"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 type UserCouponListResponse struct {
@@ -30,10 +32,12 @@ type UserCouponListRequest struct {
 
 func (CouponApi) UserCouponListView(c *gin.Context) {
 	var cr = middleware.GetBind[UserCouponListRequest](c)
+	claims := middleware.GetAuth(c)
 
 	//把用户领取过的优惠卷过滤掉
 	_list, count, _ := common.QueryList(models.UserCouponModel{
 		Status: cr.Status,
+		UserID: claims.UserID,
 	}, common.QueryOption{
 		PageInfo: cr.PageInfo,
 		Preloads: []string{"CouponModel"},
@@ -51,6 +55,7 @@ func (CouponApi) UserCouponListView(c *gin.Context) {
 	}
 
 	var list = make([]UserCouponListResponse, 0)
+	var updateList []models.UserCouponModel
 	for _, model := range _list {
 		list = append(list, UserCouponListResponse{
 			Model:       model.Model,
@@ -62,6 +67,14 @@ func (CouponApi) UserCouponListView(c *gin.Context) {
 			Status:      cr.Status,
 			CouponID:    model.CouponID,
 		})
+		if time.Until(model.EndTime) < 0 && model.Status != ctype.CouponStatusNotUsed {
+			//过期,并且状态是未使用
+			updateList = append(updateList, model)
+			logrus.Infof("优惠券过期: %v", model.ID)
+		}
+	}
+	if len(updateList) > 0 {
+		global.DB.Model(&updateList).Update("status", ctype.CouponStatusExpired)
 	}
 
 	res.OkWithList(list, count, c)
