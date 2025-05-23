@@ -11,7 +11,7 @@ import (
 )
 
 type CouponCreateRequest struct {
-	Title       string           `json:"title" binding:"required"`       //优惠券名称
+	Title       string           `json:"title"`                          //优惠券名称
 	Type        ctype.CouponType `json:"type" binding:"required"`        //优惠券类型
 	CouponPrice int              `json:"couponPrice" binding:"required"` //优惠券金额
 	Threshold   int              `json:"threshold"`                      //使用门槛

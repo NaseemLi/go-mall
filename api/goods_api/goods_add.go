@@ -6,8 +6,10 @@ import (
 	"fast_gin/models"
 	"fast_gin/models/ctype"
 	"fast_gin/utils/res"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 // type SecKillRequest struct {
@@ -150,6 +152,23 @@ func (GoodsApi) GoodsAddView(c *gin.Context) {
 	// 	}
 	// 	global.DB.Create(&co)
 	// }
+
+	//判断是否有新的商品优惠卷
+	var couponList []models.CouponModel
+	global.DB.Find(&couponList, "`type` = ?", ctype.CouponNewGoodsType)
+	if len(couponList) > 0 {
+		var addGoodsCouponList []models.CouponModel
+		for _, couponModel := range couponList {
+			couponModel.Model = models.Model{}
+			couponModel.Type = ctype.CouponGoodsType
+			couponModel.GoodsID = &model.ID
+			couponModel.Title = fmt.Sprintf("%s - 商品优惠券", model.Title)
+			addGoodsCouponList = append(addGoodsCouponList, couponModel)
+		}
+
+		global.DB.Create(&addGoodsCouponList)
+		logrus.Infof("商品添加成功,创建了 %d 张优惠券", len(addGoodsCouponList))
+	}
 
 	res.Ok(model.ID, "商品添加成功", c)
 }
