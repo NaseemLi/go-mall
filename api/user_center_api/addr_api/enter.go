@@ -54,7 +54,7 @@ func (AddrApi) AddrCreateView(c *gin.Context) {
 		DetailAddr: cr.DetailAddr,
 	}
 	err = global.DB.Take(&model, "user_id = ?", user.ID).Error
-	if err == nil {
+	if err != nil {
 		model.IsDefault = true
 	}
 
@@ -71,6 +71,7 @@ func (AddrApi) AddrListView(c *gin.Context) {
 	var cr = middleware.GetBind[models.PageInfo](c)
 
 	claims := middleware.GetAuth(c)
+	cr.Order = "is_default DESC, created_at DESC" // 默认地址排在前面
 
 	list, count, _ := common.QueryList(models.AddrModel{
 		UserID: claims.UserID,
