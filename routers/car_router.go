@@ -24,4 +24,8 @@ func CarRouter(g *gin.RouterGroup) {
 		middleware.AuthMiddleware,
 		middleware.BindJsonMiddleware[models.IDListRequest],
 		app.CarToCollectView)
+	g.POST("car/list",
+		middleware.AuthMiddleware,
+		middleware.BindQueryMiddleware[models.PageInfo],
+		app.CarListView)
 }

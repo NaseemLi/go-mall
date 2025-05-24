@@ -47,10 +47,11 @@ func (CarApi) CarCreateView(c *gin.Context) {
 	}
 
 	err = global.DB.Create(&models.CarModel{
-		UserID:  user.ID,
-		GoodsID: cr.GoodsID,
-		Price:   goods.Price,
-		Num:     cr.Num,
+		UserID:     user.ID,
+		GoodsID:    cr.GoodsID,
+		Price:      goods.Price,
+		Num:        cr.Num,
+		GoodsTitle: goods.Title,
 	}).Error
 	if err != nil {
 		res.FailWithMsg("加入购物车失败", c)

@@ -8,4 +8,5 @@ type CarModel struct {
 	GoodsModel GoodsModel `gorm:"foreignKey:GoodsID" json:"-"` //商品信息
 	Price      int        `json:"price"`                       //价格单位:分
 	Num        int        `json:"num"`                         //数量
+	GoodsTitle string     `json:"goodsTitle"`                  //商品标题
 }
