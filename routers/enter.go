@@ -19,6 +19,7 @@ func Run() {
 	CaptchaRouter(g)
 	GoodsRouter(g)
 	CouponRouter(g)
+	UserCenterRouter(g)
 
 	addr := global.Config.System.Addr()
 	if global.Config.System.Mode == "release" {
