@@ -56,5 +56,9 @@ func UserCenterRouter(g *gin.RouterGroup) {
 			middleware.AuthMiddleware,
 			middleware.BindQueryMiddleware[models.PageInfo],
 			app.AddrApi.AddrListView)
+		g.PUT("user_center/addr",
+			middleware.AuthMiddleware,
+			middleware.BindJsonMiddleware[addrapi.AddrUpdateRequest],
+			app.AddrApi.AddrUpdateView)
 	}
 }
