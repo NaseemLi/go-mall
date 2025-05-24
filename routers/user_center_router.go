@@ -60,6 +60,10 @@ func UserCenterRouter(g *gin.RouterGroup) {
 			middleware.AuthMiddleware,
 			middleware.BindJsonMiddleware[addrapi.AddrUpdateRequest],
 			app.AddrApi.AddrUpdateView)
+		g.DELETE("user_center/addr/default",
+			middleware.AuthMiddleware,
+			middleware.BindJsonMiddleware[models.IDListRequest],
+			app.AddrApi.AddrRemoveView)
 		g.POST("user_center/addr/default/:id",
 			middleware.AuthMiddleware,
 			middleware.BindUriMiddleware[models.IDRequest],
