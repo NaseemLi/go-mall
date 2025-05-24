@@ -4,6 +4,7 @@ import (
 	"fast_gin/global"
 	"fast_gin/middleware"
 	"fast_gin/models"
+	"fast_gin/service/common"
 	"fast_gin/utils/res"
 
 	"github.com/gin-gonic/gin"
@@ -55,4 +56,18 @@ func (AddrApi) AddrCreateView(c *gin.Context) {
 	}
 
 	res.OkWithMsg("地址创建成功", c)
+}
+
+func (AddrApi) AddrListView(c *gin.Context) {
+	var cr = middleware.GetBind[models.PageInfo](c)
+
+	claims := middleware.GetAuth(c)
+
+	list, count, _ := common.QueryList(models.AddrModel{
+		UserID: claims.UserID,
+	}, common.QueryOption{
+		PageInfo: cr,
+	})
+
+	res.OkWithList(list, count, c)
 }
