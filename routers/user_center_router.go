@@ -2,6 +2,7 @@ package routers
 
 import (
 	"fast_gin/api"
+	addrapi "fast_gin/api/user_center_api/addr_api"
 	collectapi "fast_gin/api/user_center_api/collect_api"
 	lookapi "fast_gin/api/user_center_api/look_api"
 	"fast_gin/middleware"
@@ -43,5 +44,13 @@ func UserCenterRouter(g *gin.RouterGroup) {
 			middleware.AuthMiddleware,
 			middleware.BindJsonMiddleware[models.IDListRequest],
 			app.CollectApi.CollectRemoveView)
+	}
+
+	// 地址管理
+	{
+		g.POST("user_center/addr",
+			middleware.AuthMiddleware,
+			middleware.BindJsonMiddleware[addrapi.AddrCreateRequest],
+			app.AddrApi.AddrCreateView)
 	}
 }
