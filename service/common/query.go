@@ -37,11 +37,6 @@ func QueryList[T any](model T, option QueryOption) (list []T, count int64, err e
 		query = query.Where(option.Where)
 	}
 
-	// 预加载
-	for _, preload := range option.Preloads {
-		query = query.Preload(preload)
-	}
-
 	// 分页
 	if option.Page <= 0 {
 		option.Page = 1
@@ -59,6 +54,11 @@ func QueryList[T any](model T, option QueryOption) (list []T, count int64, err e
 	db := global.DB.Where("")
 	if option.Debug {
 		db = db.Debug()
+	}
+
+	// 预加载
+	for _, preload := range option.Preloads {
+		db = db.Preload(preload)
 	}
 
 	db.Where(query).Limit(option.Limit).Offset(offset).Order(option.Order).Find(&list)

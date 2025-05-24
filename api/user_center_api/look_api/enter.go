@@ -39,8 +39,9 @@ func (LookApi) LookGoodsView(c *gin.Context) {
 	}
 
 	global.DB.Create(&models.LookGoodsModel{
-		UserID:  claims.UserID,
-		GoodsID: cr.GoodsID,
+		GoodsTitle: goods.Title,
+		UserID:     claims.UserID,
+		GoodsID:    cr.GoodsID,
 	})
 
 	res.OkWithMsg("查看商品成功", c)
