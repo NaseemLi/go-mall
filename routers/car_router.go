@@ -19,4 +19,9 @@ func CarRouter(g *gin.RouterGroup) {
 		middleware.AuthMiddleware,
 		middleware.BindJsonMiddleware[models.IDListRequest],
 		app.CarRemoveView)
+
+	g.POST("car/collect",
+		middleware.AuthMiddleware,
+		middleware.BindJsonMiddleware[models.IDListRequest],
+		app.CarToCollectView)
 }
