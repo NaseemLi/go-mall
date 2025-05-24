@@ -20,6 +20,7 @@ func Run() {
 	GoodsRouter(g)
 	CouponRouter(g)
 	UserCenterRouter(g)
+	CarRouter(g)
 
 	addr := global.Config.System.Addr()
 	if global.Config.System.Mode == "release" {

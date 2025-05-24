@@ -3,6 +3,7 @@ package goodsapi
 import (
 	"fast_gin/middleware"
 	"fast_gin/models"
+	"fast_gin/models/ctype"
 	"fast_gin/service/common"
 	"fast_gin/utils/res"
 
@@ -41,6 +42,7 @@ func (GoodsApi) GoodsIndexListView(c *gin.Context) {
 
 	_list, count, _ := common.QueryList(models.GoodsModel{
 		Category: cr.Category,
+		Status:   ctype.GoodsStatusTop,
 	}, common.QueryOption{
 		PageInfo: cr.PageInfo,
 	})

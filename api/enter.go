@@ -2,6 +2,7 @@ package api
 
 import (
 	"fast_gin/api/captcha_api"
+	carapi "fast_gin/api/car_api"
 	couponapi "fast_gin/api/coupon_api"
 	goodsapi "fast_gin/api/goods_api"
 	"fast_gin/api/image_api"
@@ -16,6 +17,7 @@ type Api struct {
 	GoodsApi      goodsapi.GoodsApi
 	CouponApi     couponapi.CouponApi
 	UserCenterApi usercenterapi.UserCenterApi
+	CarApi        carapi.CarApi
 }
 
 var App = new(Api)
