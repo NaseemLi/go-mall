@@ -60,5 +60,9 @@ func UserCenterRouter(g *gin.RouterGroup) {
 			middleware.AuthMiddleware,
 			middleware.BindJsonMiddleware[addrapi.AddrUpdateRequest],
 			app.AddrApi.AddrUpdateView)
+		g.POST("user_center/addr/default/:id",
+			middleware.AuthMiddleware,
+			middleware.BindUriMiddleware[models.IDRequest],
+			app.AddrApi.DefaultAddrView)
 	}
 }

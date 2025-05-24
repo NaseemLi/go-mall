@@ -21,6 +21,14 @@ type AddrCreateRequest struct {
 	DetailAddr string `json:"detailAddr" binding:"required,max=64"`
 }
 
+type AddrUpdateRequest struct {
+	ID         uint   `json:"id" binding:"required"`
+	Name       string `json:"name" binding:"required,max=16"`
+	Tel        string `json:"tel" binding:"required,max=16"`
+	Addr       string `json:"addr" binding:"required,max=32"`
+	DetailAddr string `json:"detailAddr" binding:"required,max=64"`
+}
+
 func (AddrApi) AddrCreateView(c *gin.Context) {
 	cr := middleware.GetBind[AddrCreateRequest](c)
 	user, err := middleware.GetUser(c)
@@ -73,14 +81,6 @@ func (AddrApi) AddrListView(c *gin.Context) {
 	res.OkWithList(list, count, c)
 }
 
-type AddrUpdateRequest struct {
-	ID         uint   `json:"id" binding:"required"`
-	Name       string `json:"name" binding:"required,max=16"`
-	Tel        string `json:"tel" binding:"required,max=16"`
-	Addr       string `json:"addr" binding:"required,max=32"`
-	DetailAddr string `json:"detailAddr" binding:"required,max=64"`
-}
-
 func (AddrApi) AddrUpdateView(c *gin.Context) {
 	cr := middleware.GetBind[AddrUpdateRequest](c)
 	user, err := middleware.GetUser(c)
@@ -126,4 +126,39 @@ func (AddrApi) AddrUpdateView(c *gin.Context) {
 	}
 
 	res.OkWithMsg("地址修改成功", c)
+}
+
+func (AddrApi) DefaultAddrView(c *gin.Context) {
+	cr := middleware.GetBind[models.IDRequest](c)
+
+	user, err := middleware.GetUser(c)
+	if err != nil {
+		res.FailWithMsg("用户不存在", c)
+		return
+	}
+
+	var model models.AddrModel
+	err = global.DB.Take(&model, "id = ? AND user_id = ?", cr.ID, user.ID).Error
+	if err == nil {
+
+	}
+
+	//先把当前的地址设置为默认地址
+	err = global.DB.Model(&model).Update("is_default", true).Error
+	if err != nil {
+		res.FailWithMsg("设置默认地址失败", c)
+		return
+	}
+
+	//把之前的默认地址设置为非默认
+	var list []models.AddrModel
+	global.DB.Where("user_id = ? AND is_default = ? AND id != ?", user.ID, true, cr.ID).Find(&list)
+	if len(list) > 0 {
+		for _, v := range list {
+			v.IsDefault = false
+			global.DB.Save(&v)
+		}
+	}
+
+	res.OkWithMsg("设置默认地址成功", c)
 }
