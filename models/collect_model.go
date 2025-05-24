@@ -4,6 +4,7 @@ type CollectModel struct {
 	Model
 	UserID     uint       `json:"userID"` //用户ID
 	UserModel  UserModel  `gorm:"foreignKey:UserID" json:"-"`
-	GoodsID    uint       `json:"goodsID"` //商品ID
+	GoodsID    uint       `json:"goodsID"`    //商品ID
+	GoodsTitle string     `json:"goodsTitle"` //商品标题
 	GoodsModel GoodsModel `gorm:"foreignKey:GoodsID" json:"-"`
 }
