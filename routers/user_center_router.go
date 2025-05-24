@@ -20,5 +20,9 @@ func UserCenterRouter(g *gin.RouterGroup) {
 			middleware.AuthMiddleware,
 			middleware.BindQueryMiddleware[models.PageInfo],
 			app.LookApi.LookGoodsListView)
+		g.DELETE("user_center/look",
+			middleware.AuthMiddleware,
+			middleware.BindJsonMiddleware[models.IDListRequest],
+			app.LookApi.LookRemoveView)
 	}
 }
