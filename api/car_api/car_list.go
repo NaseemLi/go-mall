@@ -7,20 +7,24 @@ import (
 	"fast_gin/models/ctype"
 	"fast_gin/service/common"
 	"fast_gin/utils/res"
+	"sort"
 
 	"github.com/gin-gonic/gin"
 )
 
 type GoodsInfo struct {
-	CarID     uint                  `json:"carId"`     //购物车ID
-	GoodsID   uint                  `json:"goodsId"`   //商品ID
-	Cover     string                `json:"cover"`     //商品封面
-	Title     string                `json:"title"`     //商品标题
-	Price     int                   `json:"price"`     //商品价格
-	Inventory *int                  `json:"inventory"` //商品库存
-	Num       int                   `json:"num"`       //购买数量
-	Status    ctype.GoodsStatusType `json:"status"`    //商品状态
-	Used      bool                  `json:"used"`      //是否选购
+	CarID      uint                  `json:"carId"`      //购物车ID
+	GoodsID    uint                  `json:"goodsId"`    //商品ID
+	Cover      string                `json:"cover"`      //商品封面
+	Title      string                `json:"title"`      //商品标题
+	Price      int                   `json:"price"`      //实际价格
+	TotalPrice int                   `json:"totalPrice"` //商品总价
+	PayPrice   int                   `json:"payPrice"`   //实际支付价格
+	Inventory  *int                  `json:"inventory"`  //商品库存
+	Num        int                   `json:"num"`        //购买数量
+	Status     ctype.GoodsStatusType `json:"status"`     //商品状态
+	Used       bool                  `json:"used"`       //是否选购
+	CouponInfo *CouponInfo           `json:"couponInfo"` //优惠券信息
 }
 
 type CouponInfo struct {
@@ -31,6 +35,7 @@ type CouponInfo struct {
 	Used        bool             `json:"used"`        //是否使用
 	Threshold   int              `json:"threshold"`   //使用门槛
 	SubPrice    int              `json:"subPrice"`    //差多少,为 0 表示可选
+	GoodsID     *uint            `json:"goodsId"`     //关联的商品ID,如果是商品优惠卷
 }
 
 type CarListRequest struct {
@@ -79,50 +84,100 @@ func (CarApi) CarListView(c *gin.Context) {
 	}
 
 	var couponInfoList = make([]CouponInfo, 0)
+	var goodsCouponList = make([]CouponInfo, 0)
+	var couponGoodsMap = map[uint]*CouponInfo{} //商品优惠卷的商品ID
+
 	for _, v := range couponList {
-		couponInfoList = append(couponInfoList, CouponInfo{
+		info := CouponInfo{
 			ID:          v.ID,
 			Type:        v.CouponModel.Type,
 			CouponPrice: v.CouponModel.CouponPrice,
-			Used:        useCouponMap[v.ID], //默认未使用
+			Used:        useCouponMap[v.ID],    //默认未使用
+			GoodsID:     v.CouponModel.GoodsID, //如果是商品优惠卷,则有商品ID
+			Threshold:   v.CouponModel.Threshold,
 			//SubPrice:    v.CouponModel.CouponPrice, //差多少
-			Threshold: v.CouponModel.Threshold,
-		})
+		}
+		if v.CouponModel.GoodsID != nil {
+			couponGoodsMap[*v.CouponModel.GoodsID] = &info //商品优惠卷的商品ID
+		}
+		if v.CouponModel.Type == ctype.CouponGoodsType {
+			goodsCouponList = append(goodsCouponList, info)
+		}
+		couponInfoList = append(couponInfoList, info)
 	}
+
+	sort.Slice(couponInfoList, func(i, j int) bool {
+		if couponInfoList[i].Used && !couponInfoList[j].Used {
+			return true // i 用了，j 没用 → i 前面
+		}
+		if !couponInfoList[i].Used && couponInfoList[j].Used {
+			return false // i 没用，j 用了 → j 前面
+		}
+		// 如果两个都用 or 都没用，就按类型从小到大排
+		return uint(couponInfoList[i].Type) < uint(couponInfoList[j].Type)
+	})
 
 	var useCarMap = map[uint]bool{}
 	for _, v := range cr.CarIDList {
 		useCarMap[v] = true
 	}
 
+	//如果有商品优惠卷,得判断有没有选择这样优惠卷中指定的商品
+
 	var totalPrice int
+	var couponPrice int //商品优惠卷的优惠金额
 	var goodsList []GoodsInfo
 	for _, v := range _list {
-		goodsList = append(goodsList, GoodsInfo{
-			CarID:     v.ID,
-			GoodsID:   v.GoodsModel.ID,
-			Cover:     v.GoodsModel.Images[0],
-			Title:     v.GoodsModel.Title,
-			Price:     v.GoodsModel.Price,
-			Inventory: v.GoodsModel.Inventory,
-			Num:       v.Num,
-			Status:    v.GoodsModel.Status,
-			Used:      useCarMap[v.ID],
-		})
-
-		if useCarMap[v.ID] {
-			totalPrice += v.GoodsModel.Price
+		goods := GoodsInfo{
+			CarID:      v.ID,
+			GoodsID:    v.GoodsModel.ID,
+			Cover:      v.GoodsModel.Images[0],
+			Title:      v.GoodsModel.Title,
+			TotalPrice: v.Price * v.Num,
+			Price:      v.Price,
+			PayPrice:   v.Price * v.Num, //实际支付价格
+			Inventory:  v.GoodsModel.Inventory,
+			Num:        v.Num,
+			Status:     v.GoodsModel.Status,
+			Used:       useCarMap[v.ID],
+			CouponInfo: couponGoodsMap[v.GoodsID],
 		}
+
+		if goods.Used {
+			//判断这个商品有没有可用的商品优惠卷
+			for _, info := range goodsCouponList {
+				if info.Used && info.Type == ctype.CouponGoodsType && *info.GoodsID == v.GoodsID && info.Threshold <= goods.TotalPrice {
+					//我选择的商品优惠卷,我也选择了对应的商品
+					if goods.CouponInfo != nil {
+						goods.CouponInfo.Used = true
+						goods.PayPrice -= goods.CouponInfo.CouponPrice
+						couponPrice += goods.CouponInfo.CouponPrice
+					}
+				}
+			}
+		}
+
+		totalPrice += goods.TotalPrice //总价
+		goodsList = append(goodsList, goods)
 	}
 
-	price := totalPrice
-	//算优惠
+	price := totalPrice - couponPrice
+	//算其他优惠卷的优惠金额
+	for _, info := range couponInfoList {
+		if info.Used && info.Type != ctype.CouponGoodsType && info.Threshold <= price {
+			price -= info.CouponPrice
+			info.SubPrice = 0
+		} else {
+			info.SubPrice = info.Threshold - price
+		}
+	}
 
 	data := CarListResponse{
 		Count:      count,
 		GoodsList:  goodsList,
 		CouponList: couponInfoList,
-		TotalPrice: price,
+		TotalPrice: totalPrice,
+		Price:      price,
 	}
 
 	res.OkWithData(data, c)
