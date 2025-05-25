@@ -133,9 +133,9 @@ func (CarApi) CarListView(c *gin.Context) {
 			GoodsID:    v.GoodsModel.ID,
 			Cover:      v.GoodsModel.Images[0],
 			Title:      v.GoodsModel.Title,
-			TotalPrice: v.Price * v.Num,
-			Price:      v.Price,
-			PayPrice:   v.Price * v.Num, //实际支付价格
+			TotalPrice: v.GoodsModel.Price * v.Num,
+			Price:      v.GoodsModel.Price,
+			PayPrice:   v.GoodsModel.Price * v.Num,
 			Inventory:  v.GoodsModel.Inventory,
 			Num:        v.Num,
 			Status:     v.GoodsModel.Status,
@@ -156,8 +156,9 @@ func (CarApi) CarListView(c *gin.Context) {
 				}
 			}
 		}
-
-		totalPrice += goods.TotalPrice //总价
+		if goods.Used {
+			totalPrice += goods.TotalPrice
+		}
 		goodsList = append(goodsList, goods)
 	}
 
