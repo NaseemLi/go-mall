@@ -28,4 +28,8 @@ func CarRouter(g *gin.RouterGroup) {
 		middleware.AuthMiddleware,
 		middleware.BindQueryMiddleware[models.PageInfo],
 		app.CarListView)
+	g.PUT("car/num",
+		middleware.AuthMiddleware,
+		middleware.BindJsonMiddleware[carapi.CarNumUpdateRequest],
+		app.CarNumUpdateView)
 }

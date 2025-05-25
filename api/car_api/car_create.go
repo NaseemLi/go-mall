@@ -26,14 +26,22 @@ func (CarApi) CarCreateView(c *gin.Context) {
 		return
 	}
 
-	mutex.Lock()
-	defer mutex.Unlock()
-
 	var goods models.GoodsModel
 	err = global.DB.Take(&goods, cr.GoodsID).Error
 	if err != nil {
 		res.FailWithMsg("商品不存在", c)
 		return
+	}
+
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	//判断库存够不够
+	if goods.Inventory != nil {
+		if cr.Num > *goods.Inventory {
+			res.FailWithMsg("选择数量大于商品库存", c)
+			return
+		}
 	}
 
 	//商品本身就在购物车中,加数量
