@@ -6,6 +6,7 @@ import (
 	couponapi "fast_gin/api/coupon_api"
 	goodsapi "fast_gin/api/goods_api"
 	"fast_gin/api/image_api"
+	orderapi "fast_gin/api/order_api"
 	"fast_gin/api/user_api"
 	usercenterapi "fast_gin/api/user_center_api"
 )
@@ -18,6 +19,7 @@ type Api struct {
 	CouponApi     couponapi.CouponApi
 	UserCenterApi usercenterapi.UserCenterApi
 	CarApi        carapi.CarApi
+	OrderApi      orderapi.OrderApi
 }
 
 var App = new(Api)

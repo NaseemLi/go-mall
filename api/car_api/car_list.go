@@ -173,6 +173,10 @@ func (CarApi) CarListView(c *gin.Context) {
 		}
 	}
 
+	if price < 0 {
+		price = 0 //不能为负数
+	}
+
 	data := CarListResponse{
 		Count:      count,
 		GoodsList:  goodsList,

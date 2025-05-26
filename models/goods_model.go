@@ -25,6 +25,13 @@ type GoodsModel struct {
 	SalesNum     int                   `json:"salesNum"`     //销量
 }
 
+func (g GoodsModel) GetCover() string {
+	if len(g.Images) > 0 {
+		return g.Images[0]
+	}
+	return ""
+}
+
 type GoodsConfig struct {
 	Title   string           `json:"title"`   //描述
 	SubList []GoodsSubConfig `json:"subList"` //子配置
