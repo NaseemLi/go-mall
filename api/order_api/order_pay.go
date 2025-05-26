@@ -5,8 +5,10 @@ import (
 	"fast_gin/middleware"
 	"fast_gin/models"
 	"fast_gin/models/ctype"
+	"fast_gin/utils/random"
 	"fast_gin/utils/res"
 	"fmt"
+	"sort"
 
 	"github.com/gin-gonic/gin"
 )
@@ -36,6 +38,24 @@ func (OrderApi) OrderPayView(c *gin.Context) {
 		return
 	}
 
+	//优惠卷校验
+	var myCouponList []models.UserCouponModel
+	var goodsCouponMap = map[uint]models.UserCouponModel{}
+	query := global.DB.Where("id in ? AND user_id = ? AND status = ? AND end_time > now()", cr.CouponIDList, claims.ID, ctype.CouponStatusNotUsed)
+	// if cr.CouponIDList != nil {
+	// 	query = query.Where("id in ?", cr.CouponIDList)
+	// }
+	global.DB.Where(query).Preload("CouponModel").Find(&myCouponList)
+	if len(cr.CouponIDList) != len(myCouponList) {
+		res.FailWithMsg("优惠卷校验失败", c)
+		return
+	}
+	for _, v := range myCouponList {
+		if v.CouponModel.Type == ctype.CouponGoodsType && v.CouponModel.GoodsID != nil {
+			goodsCouponMap[*v.CouponModel.GoodsID] = v
+		}
+	}
+
 	//判断来自购物车还是网页直接支付,有没有重复下单
 	if len(cr.CarIDList) > 0 {
 		var carList []models.CarModel
@@ -63,6 +83,9 @@ func (OrderApi) OrderPayView(c *gin.Context) {
 		res.FailWithMsg("存在未下架商品请检查", c)
 		return
 	}
+
+	var price int
+	var couponPrice int
 	for _, goodsModel := range GoodsList {
 		info := orderGoodsMap[goodsModel.ID]
 		if goodsModel.Inventory != nil {
@@ -72,24 +95,47 @@ func (OrderApi) OrderPayView(c *gin.Context) {
 				return
 			}
 		}
-	}
 
-	//优惠卷校验
-	var myCouponList []models.CouponModel
-	query := global.DB.Where("id in ? AND user_id = ? AND status = ? AND end_time > now()", cr.CouponIDList, claims.ID, ctype.CouponStatusNotUsed)
-	// if cr.CouponIDList != nil {
-	// 	query = query.Where("id in ?", cr.CouponIDList)
-	// }
-	global.DB.Where(query).Preload("CouponModel").Find(&myCouponList)
-	if len(cr.CouponIDList) != len(myCouponList) {
-		res.FailWithMsg("优惠卷校验失败", c)
-		return
+		goodsPrice := info.Num * goodsModel.Price
+		coupon, ok := goodsCouponMap[goodsModel.ID]
+		if ok && goodsPrice >= coupon.CouponModel.Threshold {
+			//如果有优惠卷,则计算优惠
+			goodsPrice -= coupon.CouponModel.CouponPrice
+			couponPrice += coupon.CouponModel.CouponPrice
+		}
+		price += goodsPrice
 	}
 
 	//生成订单号
+	no := random.GenerateOrderNumber()
 
 	//算金额
+	sort.Slice(myCouponList, func(i, j int) bool {
+		return myCouponList[i].CouponModel.Type < myCouponList[j].CouponModel.Type
+	})
+
+	for _, info := range myCouponList {
+		if info.CouponModel.Type != ctype.CouponGoodsType && price >= info.CouponModel.Threshold {
+			price -= info.CouponModel.CouponPrice
+		}
+	}
+
 	//创建订单
+	var order = models.OrderModel{
+		No:      no,
+		UserID:  claims.UserID,
+		AddrID:  cr.AddrID,
+		Price:   price,
+		Status:  1,
+		PayType: cr.PayType,
+		Coupon:  couponPrice,
+	}
+
+	if err := global.DB.Create(&order).Error; err != nil {
+		res.FailWithMsg("创建订单失败", c)
+		return
+	}
+
 	//锁后优惠卷
 	//改购物车状态
 }

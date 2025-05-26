@@ -22,6 +22,7 @@ func MigrateDB() {
 		&models.CommentModel{},
 		&models.SecKillModel{},
 		&models.CarModel{},
+		&models.OrderCouponModel{},
 	)
 	if err != nil {
 		logrus.Errorf("表结构迁移失败 %s", err)
