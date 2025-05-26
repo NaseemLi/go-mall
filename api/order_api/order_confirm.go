@@ -38,7 +38,8 @@ type OrderGoodsInfo struct {
 
 type OrderConfirmRequest struct {
 	OrderGoodsList []OrderGoodsInfo `json:"orderGoodsList"` // 订单商品列表
-	CouponIDList   *[]uint          `json:"couponIDList"`   // 优惠券ID列表
+	//TODO:订单确认接口是否优先选择优惠券,不传默认没用,传什么用什么
+	CouponIDList *[]uint `json:"couponIDList"` // 优惠券ID列表
 }
 
 type OrderConfirmResponse struct {
