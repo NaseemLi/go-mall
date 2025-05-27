@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type OrderModel struct {
 	Model
 	UserID         uint              `json:"userID"`
@@ -11,6 +13,8 @@ type OrderModel struct {
 	Coupon         int               `json:"coupon"`                      //优惠券
 	No             string            `json:"no"`                          //订单号
 	Status         int8              `json:"status"`                      //订单状态1代付款 2已付款/待发货 3已发货/待收货 4已收货/待评价 5已完成 6已取消
+	PayTime        time.Time         `json:"payTime"`                     //支付时间
+	PayUrl         string            `json:"payUrl"`                      //支付链接
 }
 
 type OrderGoodsModel struct {
@@ -21,7 +25,7 @@ type OrderGoodsModel struct {
 	OrderModel OrderModel `gorm:"foreignKey:OrderID" json:"-"`
 	GoodsID    uint       `json:"goodsID"`
 	GoodsModel GoodsModel `gorm:"foreignKey:GoodsID" json:"-"`
-	Price      uint       `json:"price"` //价格单位:分
+	Price      int        `json:"price"` //价格单位:分
 	Num        int        `json:"num"`
 	Note       string     `json:"note"` //商品备注
 }

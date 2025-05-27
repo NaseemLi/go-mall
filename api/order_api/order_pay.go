@@ -9,8 +9,11 @@ import (
 	"fast_gin/utils/res"
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 type OrderPayRequest struct {
@@ -30,10 +33,9 @@ type OrderPayResponse struct {
 func (OrderApi) OrderPayView(c *gin.Context) {
 	cr := middleware.GetBind[OrderPayRequest](c)
 	claims := middleware.GetAuth(c)
-
 	//检验地址
 	var addr models.AddrModel
-	if err := global.DB.Take(&addr, "user_id = ? and id = ?", claims.ID, cr.AddrID).Error; err != nil {
+	if err := global.DB.Debug().Take(&addr, "user_id = ? and id = ?", claims.UserID, cr.AddrID).Error; err != nil {
 		res.FailWithMsg("地址不存在", c)
 		return
 	}
@@ -84,8 +86,14 @@ func (OrderApi) OrderPayView(c *gin.Context) {
 		return
 	}
 
+	type GoodsInfo struct {
+		models.GoodsModel
+		GoodsPrice int
+	}
 	var price int
 	var couponPrice int
+	var goodsMap = map[uint]GoodsInfo{}
+
 	for _, goodsModel := range GoodsList {
 		info := orderGoodsMap[goodsModel.ID]
 		if goodsModel.Inventory != nil {
@@ -104,6 +112,10 @@ func (OrderApi) OrderPayView(c *gin.Context) {
 			couponPrice += coupon.CouponModel.CouponPrice
 		}
 		price += goodsPrice
+		goodsMap[goodsModel.ID] = GoodsInfo{
+			GoodsModel: goodsModel,
+			GoodsPrice: goodsPrice,
+		}
 	}
 
 	//生成订单号
@@ -120,22 +132,98 @@ func (OrderApi) OrderPayView(c *gin.Context) {
 		}
 	}
 
-	//创建订单
-	var order = models.OrderModel{
-		No:      no,
-		UserID:  claims.UserID,
-		AddrID:  cr.AddrID,
-		Price:   price,
-		Status:  1,
-		PayType: cr.PayType,
-		Coupon:  couponPrice,
-	}
+	//TODO: 调出支付服务
+	var payUrl string
+	err := global.DB.Transaction(func(tx *gorm.DB) error {
 
-	if err := global.DB.Create(&order).Error; err != nil {
+		//创建订单
+		var order = models.OrderModel{
+			No:      no,
+			UserID:  claims.UserID,
+			AddrID:  cr.AddrID,
+			Price:   price,
+			Status:  1,
+			PayType: cr.PayType,
+			Coupon:  couponPrice,
+			PayTime: time.Now(),
+			PayUrl:  payUrl,
+		}
+
+		if err := tx.Create(&order).Error; err != nil {
+			res.FailWithMsg("创建订单失败", c)
+			return err
+		}
+
+		//订单商品表
+		var goodsOrderList []models.OrderGoodsModel
+		for _, v := range cr.OrderGoodsList {
+			goodsOrderList = append(goodsOrderList, models.OrderGoodsModel{
+				OrderID: order.ID,
+				GoodsID: v.GoodsID,
+				UserID:  claims.UserID,
+				Price:   goodsMap[v.GoodsID].GoodsPrice,
+				Num:     v.Num,
+				Note:    v.Note,
+			})
+		}
+		if err := tx.Create(&goodsOrderList).Error; err != nil {
+			res.FailWithMsg("创建订单商品失败", c)
+			return err
+		}
+
+		var orderCouponList []models.OrderCouponModel
+		if len(myCouponList) > 0 {
+			//订单优惠卷表
+			for _, v := range myCouponList {
+				orderCouponList = append(orderCouponList, models.OrderCouponModel{
+					OrderID:      order.ID,
+					UserID:       claims.UserID,
+					UserCouponID: v.ID,
+				})
+			}
+			//创建订单优惠卷
+			if err := tx.Create(&orderCouponList).Error; err != nil {
+				res.FailWithMsg("创建订单优惠卷失败", c)
+				return err
+			}
+
+			//更新优惠卷状态,锁后优惠卷
+			err := tx.Model(&models.UserCouponModel{}).
+				Where("id in ?", cr.CouponIDList).
+				Update("status", ctype.CouponStatusLocked).Error
+
+			if err != nil {
+				res.FailWithMsg("更新优惠卷状态失败", c)
+				return err
+			}
+		}
+		//改购物车状态
+		if len(cr.CarIDList) > 0 {
+			var carList []models.CarModel
+			tx.Find(&carList, "user_id = ? and id in ? and status = 0", claims.ID, cr.CarIDList)
+			err := tx.Model(&carList).Where("id in ?", cr.CarIDList).Update("status", ctype.GoodsStatusBottom).Error
+			if err != nil {
+				res.FailWithMsg("更新购物车状态失败", c)
+				return err
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		logrus.Errorf("创建订单失败: %v", err)
 		res.FailWithMsg("创建订单失败", c)
 		return
 	}
 
-	//锁后优惠卷
-	//改购物车状态
+	if price < 0 {
+		price = 0
+	}
+
+	data := OrderPayResponse{
+		No:     no,     // 订单号
+		PayUrl: payUrl, // 支付链接
+		Price:  price,  // 支付金额
+	}
+	res.OkWithData(data, c)
 }

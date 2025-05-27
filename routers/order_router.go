@@ -15,4 +15,8 @@ func OrderRouter(g *gin.RouterGroup) {
 		middleware.AuthMiddleware,
 		middleware.BindJsonMiddleware[orderapi.OrderConfirmRequest],
 		app.OrderConfirmView)
+	g.POST("order/pay",
+		middleware.AuthMiddleware,
+		middleware.BindJsonMiddleware[orderapi.OrderPayRequest],
+		app.OrderPayView)
 }
