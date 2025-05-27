@@ -56,14 +56,20 @@ func (o *OrderApi) OrderConfirmView(c *gin.Context) {
 	var discountPrice int
 	var finalPrice int
 
-	// step 1: 获取商品信息
+	// step 1: 获取商品信息（仅查找已上架的）
 	var goodsIDList []uint
 	for _, item := range cr.OrderGoodsList {
 		goodsIDList = append(goodsIDList, item.GoodsID)
 	}
 
 	var goodsList []models.GoodsModel
-	global.DB.Find(&goodsList, "id IN ?", goodsIDList)
+	global.DB.Find(&goodsList, "id IN ? AND status = ?", goodsIDList, ctype.GoodsStatusTop)
+
+	// 校验是否存在未上架商品
+	if len(goodsList) != len(cr.OrderGoodsList) {
+		res.FailWithMsg("存在未上架商品，请检查", c)
+		return
+	}
 
 	goodsMap := make(map[uint]models.GoodsModel)
 	for _, g := range goodsList {
@@ -88,16 +94,16 @@ func (o *OrderApi) OrderConfirmView(c *gin.Context) {
 		})
 	}
 
-	// step 2: 获取用户选中的可用优惠券（在 couponIDList 中，未使用 + 未过期）
+	// step 2: 获取用户选中的可用优惠券（未使用 + 未过期 + 可用）
 	var userCoupons []models.UserCouponModel
-	global.DB.
-		Preload("CouponModel").
-		Find(&userCoupons, "user_id = ? AND status = ? AND end_time > now() AND id IN ?",
-			claims.UserID, ctype.CouponStatusNotUsed, cr.CouponIDList)
+	query := global.DB.Where("user_id = ? AND status = ? AND end_time > now()", claims.UserID, ctype.CouponStatusNotUsed)
+	if cr.CouponIDList != nil {
+		query = query.Where("id IN ?", *cr.CouponIDList)
+	}
+	query.Preload("CouponModel").Find(&userCoupons)
 
 	var couponInfoList []CouponInfo
 	var usedCouponMap = make(map[uint]bool)
-
 	var bestGeneralCoupon *CouponInfo
 	bestDiscount := 0
 
