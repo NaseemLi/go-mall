@@ -96,7 +96,8 @@ func (o *OrderApi) OrderConfirmView(c *gin.Context) {
 
 	// step 2: 获取用户选中的可用优惠券（未使用 + 未过期 + 可用）
 	var userCoupons []models.UserCouponModel
-	query := global.DB.Where("user_id = ? AND status = ? AND end_time > now()", claims.UserID, ctype.CouponStatusNotUsed)
+	query := global.DB.Where("user_id = ? AND status = ? AND end_time > now()",
+		claims.UserID, ctype.CouponStatusNotUsed)
 	if cr.CouponIDList != nil {
 		query = query.Where("id IN ?", *cr.CouponIDList)
 	}

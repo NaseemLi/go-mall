@@ -7,4 +7,5 @@ type Config struct {
 	Jwt    Jwt    `yaml:"jwt"`
 	Upload Upload `yaml:"upload"`
 	Site   Site   `yaml:"site"`
+	Pay    Pay    `yaml:"pay"`
 }

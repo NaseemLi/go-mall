@@ -23,3 +23,6 @@ upload:
 site:
   login:
     captcha: false
+pay:
+  webPayUrl: https://127.0.0.1/order/pay
+  callbackUrl: https://127.0.0.1/order/pay/callback

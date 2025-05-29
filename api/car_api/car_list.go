@@ -68,6 +68,7 @@ func (CarApi) CarListView(c *gin.Context) {
 		UserID: claims.UserID,
 	}, common.QueryOption{
 		PageInfo: page,
+		Where:    global.DB.Where("status = ?", ctype.CarStatusPending),
 		Likes:    []string{"goods_title"},
 		Preloads: []string{"GoodsModel"},
 	})
