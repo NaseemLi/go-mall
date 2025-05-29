@@ -36,7 +36,8 @@ func (OrderApi) OrderPayView(c *gin.Context) {
 	claims := middleware.GetAuth(c)
 
 	var addr models.AddrModel
-	if err := global.DB.Debug().Take(&addr, "user_id = ? and id = ?", claims.UserID, cr.AddrID).Error; err != nil {
+	if err := global.DB.Take(&addr, "user_id = ? and id = ?",
+		claims.UserID, cr.AddrID).Error; err != nil {
 		res.FailWithMsg("地址不存在", c)
 		return
 	}
@@ -65,7 +66,8 @@ func (OrderApi) OrderPayView(c *gin.Context) {
 
 	if len(cr.CarIDList) > 0 {
 		var carList []models.CarModel
-		err := global.DB.Find(&carList, "user_id = ? and id in ? and status = ?", claims.UserID, cr.CarIDList, ctype.CarStatusPending).Error
+		err := global.DB.Find(&carList, "user_id = ? and id in ? and status = ?",
+			claims.UserID, cr.CarIDList, ctype.CarStatusPending).Error
 		if err != nil || len(carList) != len(cr.CarIDList) {
 			res.FailWithMsg("购物车商品重复下单", c)
 			return
@@ -116,7 +118,41 @@ func (OrderApi) OrderPayView(c *gin.Context) {
 			GoodsPrice: goodsPrice,
 		}
 	}
+	//重复下单时,若 15min 中内有下单,则挨个查询订单里商品和传入商品是否重复
+	var myOrderList []models.OrderModel
+	global.DB.Order("created_at desc").
+		Preload("OrderGoodsList").
+		Find(&myOrderList, "user_id = ? and status = ? and created_at > ?",
+			claims.UserID, 1, time.Now().Add(-15*time.Minute))
 
+	if len(myOrderList) > 0 {
+		for _, v := range myOrderList {
+			if len(v.OrderGoodsList) != len(cr.OrderGoodsList) {
+				continue
+			}
+			var repeat bool = true
+			sort.Slice(v.OrderGoodsList, func(i, j int) bool {
+				return v.OrderGoodsList[i].GoodsID < v.OrderGoodsList[j].GoodsID
+			})
+			sort.Slice(cr.OrderGoodsList, func(i, j int) bool {
+				return cr.OrderGoodsList[i].GoodsID < cr.OrderGoodsList[j].GoodsID
+			})
+			for i := 0; i < len(cr.OrderGoodsList); i++ {
+				if v.OrderGoodsList[i].GoodsID != cr.OrderGoodsList[i].GoodsID ||
+					v.OrderGoodsList[i].Num != cr.OrderGoodsList[i].Num {
+					repeat = false
+					break
+				}
+			}
+			if repeat {
+				logrus.Warnf("用户重复下单,订单号: %v", v.ID)
+				res.FailWithMsg("存在未支付的重复订单,请勿重复下单", c)
+				return
+			}
+		}
+	}
+
+	// 生成订单号
 	no := random.GenerateOrderNumber()
 
 	sort.Slice(myCouponList, func(i, j int) bool {
@@ -185,7 +221,8 @@ func (OrderApi) OrderPayView(c *gin.Context) {
 				return err
 			}
 			err := tx.Model(&models.UserCouponModel{}).
-				Where("id in ? AND user_id = ? AND status = ?", cr.CouponIDList, claims.UserID, ctype.CouponStatusNotUsed).
+				Where("id in ? AND user_id = ? AND status = ?",
+					cr.CouponIDList, claims.UserID, ctype.CouponStatusNotUsed).
 				Update("status", ctype.CouponStatusLocked).Error
 			if err != nil {
 				return err
