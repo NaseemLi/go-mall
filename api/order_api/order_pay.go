@@ -96,7 +96,6 @@ func (OrderApi) OrderPayView(c *gin.Context) {
 		models.GoodsModel
 		GoodsPrice int
 	}
-
 	price := 0
 	couponPrice := 0
 	goodsMap := map[uint]GoodsInfo{}
