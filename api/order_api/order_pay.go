@@ -6,6 +6,7 @@ import (
 	"fast_gin/models"
 	"fast_gin/models/ctype"
 	payser "fast_gin/service/pay_ser"
+	redisdelay "fast_gin/service/redis_ser/redis_delay"
 	"fast_gin/utils/random"
 	"fast_gin/utils/res"
 	"fmt"
@@ -178,15 +179,16 @@ func (OrderApi) OrderPayView(c *gin.Context) {
 
 	err = global.DB.Transaction(func(tx *gorm.DB) error {
 		order := models.OrderModel{
-			No:      no,
-			UserID:  claims.UserID,
-			AddrID:  cr.AddrID,
-			Price:   price,
-			Status:  1,
-			PayType: cr.PayType,
-			Coupon:  couponPrice,
-			PayTime: time.Now(),
-			PayUrl:  payUrl,
+			No:        no,
+			UserID:    claims.UserID,
+			AddrID:    cr.AddrID,
+			Price:     price,
+			Status:    1,
+			PayType:   cr.PayType,
+			Coupon:    couponPrice,
+			PayTime:   time.Now(),
+			PayUrl:    payUrl,
+			CarIDList: cr.CarIDList,
 		}
 		if err := tx.Create(&order).Error; err != nil {
 			return err
@@ -246,9 +248,13 @@ func (OrderApi) OrderPayView(c *gin.Context) {
 		return
 	}
 
-	res.OkWithData(OrderPayResponse{
+	data := OrderPayResponse{
 		No:     no,
 		PayUrl: payUrl,
 		Price:  price,
-	}, c)
+	}
+
+	redisdelay.AddOrderDelay(data.No)
+
+	res.OkWithData(data, c)
 }
