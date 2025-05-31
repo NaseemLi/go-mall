@@ -25,7 +25,7 @@ type OrderAdminListRequest struct {
 type OrderAdminListResponse struct {
 	models.OrderModel
 	UserNickname   string                `json:"userNickname"`
-	OrderGoodsInfo []OrderAdminGoodsInfo `json:"orderGoodsInfo"` // 订单商品信息
+	OrderGoodsList []OrderAdminGoodsInfo `json:"orderGoodsList"` // 订单商品信息
 }
 
 func (OrderApi) OrderAdminListView(c *gin.Context) {
@@ -53,7 +53,7 @@ func (OrderApi) OrderAdminListView(c *gin.Context) {
 		list = append(list, OrderAdminListResponse{
 			OrderModel:     item,
 			UserNickname:   item.UserModel.Nickname,
-			OrderGoodsInfo: goodsList,
+			OrderGoodsList: goodsList,
 		})
 	}
 	res.OkWithList(list, count, c)
