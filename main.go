@@ -18,7 +18,7 @@ func main() {
 
 	flags.Run()
 
-	//开启延时队列
+	// 开启延时队列
 	go redisdelay.PollOrderDelay()
 
 	// 定时任务

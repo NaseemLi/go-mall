@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const waitTime = 5 // 延时处理时间，单位为秒
+const waitTime = 900 // 延时处理时间，单位为秒 15min=900s
 const queue = "delay_order_queue"
 
 // 添加订单到延时队列

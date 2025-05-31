@@ -19,4 +19,8 @@ func OrderRouter(g *gin.RouterGroup) {
 		middleware.AuthMiddleware,
 		middleware.BindJsonMiddleware[orderapi.OrderPayRequest],
 		app.OrderPayView)
+	g.GET("order/status",
+		middleware.AuthMiddleware,
+		middleware.BindQueryMiddleware[orderapi.OrderStatusRequest],
+		app.OrderStatusView)
 }
