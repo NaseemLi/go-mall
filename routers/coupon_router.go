@@ -11,28 +11,39 @@ import (
 
 func CouponRouter(g *gin.RouterGroup) {
 	app := api.App.CouponApi
-	g.POST("coupon",
-		middleware.AdminMiddleware,
-		middleware.BindJsonMiddleware[couponapi.CouponCreateRequest],
-		app.CouponCreateView)
-	g.GET("coupon",
-		middleware.AdminMiddleware,
-		middleware.BindQueryMiddleware[models.PageInfo],
-		app.CouponListView)
-	g.DELETE("coupon",
-		middleware.AdminMiddleware,
-		middleware.BindJsonMiddleware[models.IDListRequest],
-		app.CouponRemoveView)
 
-	g.GET("coupon/acceptable",
-		middleware.BindQueryMiddleware[models.PageInfo],
-		app.CouponUserAcceptableListView)
-	g.POST("coupon/receive",
-		middleware.AuthMiddleware,
-		middleware.BindJsonMiddleware[couponapi.UserReceiveCouponRequest],
-		app.UserReceiveCouponView)
-	g.GET("coupon/user",
-		middleware.AuthMiddleware,
-		middleware.BindQueryMiddleware[couponapi.UserCouponListRequest],
-		app.UserCouponListView)
+	// 优惠券管理（管理员）
+	{
+		g.POST("coupon",
+			middleware.AdminMiddleware,
+			middleware.BindJsonMiddleware[couponapi.CouponCreateRequest],
+			app.CouponCreateView)
+		g.GET("coupon",
+			middleware.AdminMiddleware,
+			middleware.BindQueryMiddleware[models.PageInfo],
+			app.CouponListView)
+		g.DELETE("coupon",
+			middleware.AdminMiddleware,
+			middleware.BindJsonMiddleware[models.IDListRequest],
+			app.CouponRemoveView)
+	}
+
+	// 优惠券展示（面向所有用户，无需鉴权）
+	{
+		g.GET("coupon/acceptable",
+			middleware.BindQueryMiddleware[models.PageInfo],
+			app.CouponUserAcceptableListView)
+	}
+
+	// 用户领券 & 用户券列表
+	{
+		g.POST("coupon/receive",
+			middleware.AuthMiddleware,
+			middleware.BindJsonMiddleware[couponapi.UserReceiveCouponRequest],
+			app.UserReceiveCouponView)
+		g.GET("coupon/user",
+			middleware.AuthMiddleware,
+			middleware.BindQueryMiddleware[couponapi.UserCouponListRequest],
+			app.UserCouponListView)
+	}
 }
