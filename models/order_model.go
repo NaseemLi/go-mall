@@ -9,6 +9,7 @@ type OrderModel struct {
 	UserID         uint               `json:"userID"`
 	UserModel      UserModel          `gorm:"foreignKey:UserID" json:"-"`
 	AddrID         uint               `json:"addrID"`                                         //地址ID
+	AddrModel      AddrModel          `gorm:"foreignKey:AddrID" json:"-"`                     //地址信息
 	OrderGoodsList []OrderGoodsModel  `gorm:"foreignKey:OrderID" json:"-"`                    //订单商品列表
 	UserCouponList []OrderCouponModel `gorm:"foreignKey:OrderID" json:"-"`                    //订单优惠券列表
 	PayType        int8               `json:"payType"`                                        //支付方式

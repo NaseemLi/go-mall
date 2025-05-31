@@ -4,6 +4,7 @@ import (
 	"fast_gin/api"
 	orderapi "fast_gin/api/order_api"
 	"fast_gin/middleware"
+	"fast_gin/models"
 
 	"github.com/gin-gonic/gin"
 )
@@ -43,4 +44,8 @@ func OrderRouter(g *gin.RouterGroup) {
 		middleware.AuthMiddleware,
 		middleware.BindJsonMiddleware[orderapi.OrderRevRequest],
 		app.OrderRevGoodsView)
+	g.GET("order/detail/:id",
+		middleware.AuthMiddleware,
+		middleware.BindUriMiddleware[models.IDRequest],
+		app.OrderDetailView)
 }
