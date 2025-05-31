@@ -48,4 +48,7 @@ func OrderRouter(g *gin.RouterGroup) {
 		middleware.AuthMiddleware,
 		middleware.BindUriMiddleware[models.IDRequest],
 		app.OrderDetailView)
+	g.PUT("order/callback",
+		middleware.BindJsonMiddleware[orderapi.OrderPayCallbackRequest],
+		app.OrderPayCallbackView)
 }
