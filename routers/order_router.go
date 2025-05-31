@@ -51,4 +51,7 @@ func OrderRouter(g *gin.RouterGroup) {
 	g.PUT("order/callback",
 		middleware.BindJsonMiddleware[orderapi.OrderPayCallbackRequest],
 		app.OrderPayCallbackView)
+	g.GET("order/pay/page",
+		middleware.BindQueryMiddleware[orderapi.OrderPayDetailRequest],
+		app.OrderPayDetailView)
 }
