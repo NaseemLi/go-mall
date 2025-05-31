@@ -19,6 +19,7 @@ type OrderModel struct {
 	PayTime        time.Time          `json:"payTime"`                                        //支付时间
 	PayUrl         string             `json:"payUrl"`                                         //支付链接
 	CarIDList      []uint             `gorm:"type:longtext;serializer:json" json:"carIDList"` //购物车ID列表
+	WaybillNumber  string             `gorm:"size:32" json:"waybillNumber"`                   //运单号
 }
 
 type OrderGoodsModel struct {
