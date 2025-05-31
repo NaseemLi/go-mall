@@ -10,16 +10,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type OrderAdminRemoveRequest struct {
+type OrderUserRemoveRequest struct {
 }
 
-func (OrderApi) OrderAdminRemoveView(c *gin.Context) {
+func (OrderApi) OrderUserRemoveView(c *gin.Context) {
 	cr := middleware.GetBind[models.IDListRequest](c)
+	claims := middleware.GetAuth(c)
 
 	var orderList []models.OrderModel
-	global.DB.Unscoped().Find(&orderList, "id in ?", cr.IDList)
+	global.DB.Find(&orderList, "user_id = ? and id in ?", claims.UserID, cr.IDList)
 	if len(orderList) > 0 {
-		global.DB.Unscoped().Delete(&orderList)
+		global.DB.Delete(&orderList)
 	}
 
 	msg := fmt.Sprintf("订单删除成功,删除了 %d 个订单", len(orderList))

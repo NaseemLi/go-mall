@@ -55,6 +55,11 @@ func OrderRouter(g *gin.RouterGroup) {
 		middleware.BindQueryMiddleware[orderapi.OrderPayDetailRequest],
 		app.OrderPayDetailView)
 	g.DELETE("order/admin/remove",
+		middleware.AdminMiddleware,
 		middleware.BindJsonMiddleware[models.IDListRequest],
 		app.OrderAdminRemoveView)
+	g.DELETE("order/user/remove",
+		middleware.AuthMiddleware,
+		middleware.BindJsonMiddleware[models.IDListRequest],
+		app.OrderUserRemoveView)
 }

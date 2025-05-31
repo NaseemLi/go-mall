@@ -11,6 +11,7 @@ import (
 
 type OrderModel struct {
 	Model
+	DeleteAt       *gorm.DeletedAt    `json:"deleteAt"` //删除时间,软删除
 	UserID         uint               `json:"userID"`
 	UserModel      UserModel          `gorm:"foreignKey:UserID" json:"-"`
 	AddrID         uint               `json:"addrID"`                                         //地址ID
@@ -29,21 +30,25 @@ type OrderModel struct {
 }
 
 func (o *OrderModel) BeforeDelete(tx *gorm.DB) error {
-	// 订单商品表
-	var goodsList []OrderGoodsModel
-	tx.Find(&goodsList, "order_id = ?", o.ID)
-	if len(goodsList) > 0 {
-		tx.Delete(&goodsList)
-	}
-	logrus.Infof("删除多少条订单商品: %d", len(goodsList))
+	if tx.Statement.Unscoped {
+		logrus.Infof("管理员删除订单: %d", o.ID)
+		// 订单商品表
+		var goodsList []OrderGoodsModel
+		tx.Find(&goodsList, "order_id = ?", o.ID)
+		if len(goodsList) > 0 {
+			tx.Delete(&goodsList)
+		}
+		logrus.Infof("删除多少条订单商品: %d", len(goodsList))
 
-	// 订单优惠卷表
-	var couponList []OrderCouponModel
-	tx.Find(&couponList, "order_id = ?", o.ID)
-	if len(couponList) > 0 {
-		tx.Delete(&couponList)
+		// 订单优惠卷表
+		var couponList []OrderCouponModel
+		tx.Find(&couponList, "order_id = ?", o.ID)
+		if len(couponList) > 0 {
+			tx.Delete(&couponList)
+		}
+		logrus.Infof("删除多少条订单优惠卷: %d", len(couponList))
 	}
-	logrus.Infof("删除多少条订单优惠卷: %d", len(couponList))
+
 	return nil
 }
 

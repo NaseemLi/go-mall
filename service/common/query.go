@@ -14,6 +14,7 @@ type QueryOption struct {
 	Where    *gorm.DB
 	Preloads []string
 	Debug    bool
+	Unscoped bool
 }
 
 func QueryList[T any](model T, option QueryOption) (list []T, count int64, err error) {
@@ -54,6 +55,10 @@ func QueryList[T any](model T, option QueryOption) (list []T, count int64, err e
 	db := global.DB.Where("")
 	if option.Debug {
 		db = db.Debug()
+	}
+
+	if option.Unscoped {
+		db = db.Unscoped()
 	}
 
 	// 预加载

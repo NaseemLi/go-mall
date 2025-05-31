@@ -37,6 +37,7 @@ func (OrderApi) OrderAdminListView(c *gin.Context) {
 		Status: cr.Status,
 	}, common.QueryOption{
 		PageInfo: cr.PageInfo,
+		Unscoped: true,
 		Preloads: []string{"UserModel", "OrderGoodsList.GoodsModel"},
 	})
 
