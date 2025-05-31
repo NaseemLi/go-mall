@@ -27,4 +27,8 @@ func OrderRouter(g *gin.RouterGroup) {
 		middleware.AuthMiddleware,
 		middleware.BindJsonMiddleware[orderapi.OrderNoteUpdateRequest],
 		app.OrderNoteUpdateView)
+	g.PUT("order/admin",
+		middleware.AdminMiddleware,
+		middleware.BindQueryMiddleware[orderapi.OrderAdminListRequest],
+		app.OrderAdminListView)
 }
