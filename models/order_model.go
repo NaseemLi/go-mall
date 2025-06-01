@@ -26,7 +26,6 @@ type OrderModel struct {
 	PayTime        time.Time          `json:"payTime"`                                        //支付时间
 	PayUrl         string             `json:"payUrl"`                                         //支付链接
 	CarIDList      []uint             `gorm:"type:longtext;serializer:json" json:"carIDList"` //购物车ID列表
-	WaybillNumber  string             `gorm:"size:32" json:"waybillNumber"`                   //运单号
 }
 
 func (o *OrderModel) BeforeDelete(tx *gorm.DB) error {
@@ -54,15 +53,17 @@ func (o *OrderModel) BeforeDelete(tx *gorm.DB) error {
 
 type OrderGoodsModel struct {
 	Model
-	UserID     uint       `json:"userID"`
-	UserModel  UserModel  `gorm:"foreignKey:UserID" json:"-"`
-	OrderID    uint       `json:"orderID"`
-	OrderModel OrderModel `gorm:"foreignKey:OrderID" json:"-"`
-	GoodsID    uint       `json:"goodsID"`
-	GoodsModel GoodsModel `gorm:"foreignKey:GoodsID" json:"-"`
-	Price      int        `json:"price"` //价格单位:分
-	Num        int        `json:"num"`
-	Note       string     `json:"note"` //商品备注
+	UserID        uint       `json:"userID"`
+	UserModel     UserModel  `gorm:"foreignKey:UserID" json:"-"`
+	OrderID       uint       `json:"orderID"`
+	OrderModel    OrderModel `gorm:"foreignKey:OrderID" json:"-"`
+	GoodsID       uint       `json:"goodsID"`
+	GoodsModel    GoodsModel `gorm:"foreignKey:GoodsID" json:"-"`
+	Price         int        `json:"price"` //价格单位:分
+	Num           int        `json:"num"`
+	Note          string     `json:"note"`                         //商品备注
+	Status        int8       `json:"status"`                       //商品状态: 0 1 已发货
+	WaybillNumber string     `gorm:"size:32" json:"waybillNumber"` //运单号
 }
 
 type OrderCouponModel struct {

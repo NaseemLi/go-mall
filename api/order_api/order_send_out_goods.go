@@ -11,45 +11,58 @@ import (
 )
 
 type OrderSendOutGoodsRequest struct {
-	OrderID       uint   `json:"orderID" binding:"required"` // 订单ID
-	WaybillNumber string `json:"waybillNumber"`              // 运单号
-	Message       string `json:"message"`                    // 备注信息
+	OrderGoodsID  uint   `json:"orderGoodsID" binding:"required"` // 订单商品ID
+	WaybillNumber string `json:"waybillNumber"`                   // 运单号
+	Message       string `json:"message"`                         // 备注信息
 }
 
 func (OrderApi) OrderSendOutGoodsView(c *gin.Context) {
 	cr := middleware.GetBind[OrderSendOutGoodsRequest](c)
 
-	// 检查订单是否存在
-	var model models.OrderModel
-	err := global.DB.Where("id = ?", cr.OrderID).Take(&model).Error
+	// 检查订单商品是否存在
+	var orderGoods models.OrderGoodsModel
+	err := global.DB.Preload("OrderModel").
+		Where("id = ?", cr.OrderGoodsID).
+		Take(&orderGoods).Error
 	if err != nil {
 		res.FailWithMsg("订单不存在或无权限操作", c)
 		return
 	}
 
 	// 更新订单状态为已发货
-	if model.Status != 2 {
+	if orderGoods.OrderModel.Status != 2 {
 		res.FailWithMsg("订单状态不允许发货", c)
 		return
 	}
 
 	err = global.DB.Transaction(func(tx *gorm.DB) error {
-		err := tx.Model(&model).Updates(map[string]any{
-			"status":         3,
+		//改订单商品
+		err := tx.Model(&orderGoods).Updates(map[string]any{
+			"status":         1,
 			"waybill_number": cr.WaybillNumber,
 		}).Error
 		if err != nil {
 			res.FailWithMsg("发货失败", c)
 			return err
 		}
+		//查订单是不是已经改完
+		var orderGoodsList []models.OrderGoodsModel
+		tx.Find(&orderGoodsList, "order_id = ? AND status = ?", orderGoods.OrderID, 0)
+		if len(orderGoodsList) == 0 {
+			tx.Model(&orderGoods.OrderModel).Updates(map[string]any{
+				"status": 3, // 更新订单状态为已发货
+			})
+		}
 
 		if cr.Message != "" {
 			// 添加备注信息
 			err := tx.Create(&models.MessageModel{
-				UserID:  model.UserID,
-				OrderID: model.ID,
-				MsgList: []string{cr.Message},
-				IsRead:  false,
+				UserID:       orderGoods.UserID,
+				OrderID:      orderGoods.OrderID,
+				GoodsID:      orderGoods.GoodsID,
+				OrderGoodsID: orderGoods.ID,
+				MsgList:      []string{cr.Message},
+				IsRead:       false,
 			}).Error
 			if err != nil {
 				res.FailWithMsg("添加备注信息失败", c)

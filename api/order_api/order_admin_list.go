@@ -10,16 +10,19 @@ import (
 )
 
 type OrderAdminGoodsInfo struct {
-	GoodsID    uint   `json:"goodsID"`    // 商品ID
-	GoodsCover string `json:"goodsCover"` // 商品封面
-	GoodsTitle string `json:"goodsTitle"` // 商品标题
+	GoodsID      uint   `json:"goodsID"`    // 商品ID
+	GoodsCover   string `json:"goodsCover"` // 商品封面
+	GoodsTitle   string `json:"goodsTitle"` // 商品标题
+	OrderGoodsID uint   `form:"orderGoodsID"`
+	Status       int8   `form:"status"` // 商品状态: 0 1 已发货
 }
 
+// 订单状态: 1代付款 2已付款/待发货 3已发货/待收货 4已收货/待评价 5已评论/已完成 6已取消 7已超时
 type OrderAdminListRequest struct {
 	models.PageInfo
 	UserID uint   `form:"userID"`
 	No     string `form:"no"`
-	Status int8   `form:"status"` // 订单状态
+	Status int8   `form:"status"`
 }
 
 type OrderAdminListResponse struct {
@@ -46,9 +49,11 @@ func (OrderApi) OrderAdminListView(c *gin.Context) {
 		var goodsList = make([]OrderAdminGoodsInfo, 0)
 		for _, v := range item.OrderGoodsList {
 			goodsList = append(goodsList, OrderAdminGoodsInfo{
-				GoodsID:    v.GoodsID,
-				GoodsCover: v.GoodsModel.GetCover(),
-				GoodsTitle: v.GoodsModel.Title,
+				GoodsID:      v.GoodsID,
+				GoodsCover:   v.GoodsModel.GetCover(),
+				GoodsTitle:   v.GoodsModel.Title,
+				OrderGoodsID: v.ID,
+				Status:       v.Status,
 			})
 		}
 		list = append(list, OrderAdminListResponse{
