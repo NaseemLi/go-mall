@@ -7,6 +7,7 @@ import (
 	couponapi "fast_gin/api/coupon_api"
 	goodsapi "fast_gin/api/goods_api"
 	"fast_gin/api/image_api"
+	msgapi "fast_gin/api/msg_api"
 	orderapi "fast_gin/api/order_api"
 	"fast_gin/api/user_api"
 	usercenterapi "fast_gin/api/user_center_api"
@@ -22,6 +23,7 @@ type Api struct {
 	CarApi        carapi.CarApi
 	OrderApi      orderapi.OrderApi
 	CommentApi    commentapi.CommentApi
+	MsgApi        msgapi.MsgApi
 }
 
 var App = new(Api)

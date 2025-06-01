@@ -23,6 +23,7 @@ func Run() {
 	CarRouter(g)
 	OrderRouter(g)
 	CommentRouter(g)
+	MsgRouter(g)
 
 	addr := global.Config.System.Addr()
 	if global.Config.System.Mode == "release" {
