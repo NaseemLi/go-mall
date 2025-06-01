@@ -1,9 +1,13 @@
 package models
 
 import (
+	"context"
+	"fast_gin/global"
 	"fast_gin/models/ctype"
+	"fmt"
 
 	"github.com/sirupsen/logrus"
+	"github.com/zhenghaoz/gorse/client"
 	"gorm.io/gorm"
 )
 
@@ -98,6 +102,25 @@ func (u UserModel) BeforeDelete(tx *gorm.DB) (err error) {
 		logrus.Infof("删除用户%s 的系统消息表数据", u.Username)
 		logrus.Infof("删除多少条系统消息表数据: %d", len(messageList))
 	}
+
+	if global.Gorse == nil {
+		return nil
+	}
+
+	global.Gorse.DeleteUser(context.Background(), fmt.Sprintf("%d", u.ID))
+
 	logrus.Infof("删除用户%s 完成\n", u.Username)
+	return nil
+}
+
+func (u *UserModel) AfterCreate(tx *gorm.DB) (err error) {
+	if global.Gorse == nil {
+		return nil
+	}
+
+	global.Gorse.InsertUser(context.Background(), client.User{
+		UserId:  fmt.Sprintf("%d", u.ID),
+		Comment: u.Username,
+	})
 	return nil
 }

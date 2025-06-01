@@ -119,7 +119,7 @@ popular_window = "720h"
 #   related: 根据共同喜欢的物品数量查找邻居。
 #   auto: 如果用户有标签，根据共同标签数量查找邻居；否则，根据共同喜欢的物品数量查找邻居。
 # 默认值为 "auto"。
-neighbor_type = "similar"
+neighbor_type = "related"
 
 # 启用基于向量索引的近似用户邻居搜索。默认值为 true。
 enable_index = true
@@ -137,7 +137,7 @@ index_fit_epoch = 3
 #   related: 根据共同用户数量查找邻居。
 #   auto: 如果物品有标签，根据共同标签数量查找邻居；否则，根据共同用户数量查找邻居。
 # 默认值为 "auto"。
-neighbor_type = "similar"
+neighbor_type = "related"
 
 # 启用基于向量索引的近似物品邻居搜索。默认值为 true。
 enable_index = true

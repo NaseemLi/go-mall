@@ -1,9 +1,14 @@
 package models
 
 import (
+	"context"
+	"fast_gin/global"
 	"fast_gin/models/ctype"
+	"fmt"
+	"time"
 
 	"github.com/sirupsen/logrus"
+	"github.com/zhenghaoz/gorse/client"
 	"gorm.io/gorm"
 )
 
@@ -73,7 +78,31 @@ func (g GoodsModel) BeforeDelete(tx *gorm.DB) (err error) {
 		logrus.Errorf("删除商品评论失败: goods_id=%d, err=%v", g.ID, result.Error)
 		return result.Error
 	}
+
+	if global.Gorse == nil {
+		return nil
+	}
+
+	global.Gorse.DeleteItem(context.Background(), fmt.Sprintf("%d", g.ID))
+
 	logrus.Infof("删除商品评论 %d 个: goods_id=%d", result.RowsAffected, g.ID)
 
+	return nil
+}
+
+func (g *GoodsModel) AfterCreate(tx *gorm.DB) (err error) {
+	if global.Gorse == nil {
+		return nil
+	}
+
+	item := client.Item{
+		ItemId:    fmt.Sprintf("%d", g.ID),
+		Comment:   g.Title,
+		Timestamp: time.Now().Format("2006-01-02 15:04:05"),
+	}
+	if g.Category != "" {
+		item.Categories = []string{g.Category}
+	}
+	global.Gorse.InsertItem(context.Background(), item)
 	return nil
 }

@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"fast_gin/global"
+
 	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
 )
@@ -10,7 +11,7 @@ import (
 func InitRedis() (client *redis.Client) {
 	cfg := global.Config.Redis
 	if cfg.Addr == "" {
-		logrus.Warnf("未配置redis连接")
+		logrus.Warnf("redis未配置连接")
 		return
 	}
 	client = redis.NewClient(&redis.Options{
@@ -20,9 +21,9 @@ func InitRedis() (client *redis.Client) {
 	})
 	_, err := client.Ping(context.Background()).Result()
 	if err != nil {
-		logrus.Errorf("连接redis失败 %s", err)
+		logrus.Errorf("redis连接失败 %s", err)
 		return
 	}
-	logrus.Infof("成功连接redis")
+	logrus.Infof("redis连接成功")
 	return
 }

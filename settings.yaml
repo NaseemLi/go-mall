@@ -26,3 +26,7 @@ site:
 pay:
   webPayUrl: https://127.0.0.1/order/pay
   callbackUrl: https://127.0.0.1/order/pay/callback
+gorse:
+  enable: true
+  addr: http://192.168.1.20:8088
+  api_key:

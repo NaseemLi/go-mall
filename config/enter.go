@@ -8,4 +8,5 @@ type Config struct {
 	Upload Upload `yaml:"upload"`
 	Site   Site   `yaml:"site"`
 	Pay    Pay    `yaml:"pay"`
+	Gorse  Gorse  `yaml:"gorse"`
 }
