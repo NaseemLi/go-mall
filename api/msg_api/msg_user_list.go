@@ -30,6 +30,7 @@ func (MsgApi) MsgUserListView(c *gin.Context) {
 		query = query.Where("is_read = ?", *cr.IsRead)
 	}
 
+	cr.PageInfo.Order = "is_read, created_at desc"
 	_list, count, _ := common.QueryList(models.MessageModel{
 		UserID: claims.UserID,
 	}, common.QueryOption{

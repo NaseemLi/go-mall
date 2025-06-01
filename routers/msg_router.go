@@ -13,9 +13,16 @@ func MsgRouter(g *gin.RouterGroup) {
 
 	// 消息列表
 	{
-		g.GET("msg",
+		//用户消息列表
+		g.GET("msg/user",
 			middleware.AuthMiddleware,
 			middleware.BindQueryMiddleware[msgapi.MsgUserListRequest],
 			app.MsgUserListView)
+
+		//管理员消息列表
+		g.GET("msg/admin",
+			middleware.AuthMiddleware,
+			middleware.BindQueryMiddleware[msgapi.MsgAdminListRequest],
+			app.MsgAdminListView)
 	}
 }
