@@ -9,6 +9,7 @@ import (
 	"fast_gin/api/image_api"
 	msgapi "fast_gin/api/msg_api"
 	orderapi "fast_gin/api/order_api"
+	seckillapi "fast_gin/api/seckill_api"
 	"fast_gin/api/user_api"
 	usercenterapi "fast_gin/api/user_center_api"
 )
@@ -24,6 +25,7 @@ type Api struct {
 	OrderApi      orderapi.OrderApi
 	CommentApi    commentapi.CommentApi
 	MsgApi        msgapi.MsgApi
+	SecKillApi    seckillapi.SecKillApi
 }
 
 var App = new(Api)
