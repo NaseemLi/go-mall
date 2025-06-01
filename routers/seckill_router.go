@@ -36,5 +36,10 @@ func SecKillRouter(g *gin.RouterGroup) {
 			middleware.AuthMiddleware,
 			middleware.BindJsonMiddleware[seckillapi.SecKillRequest],
 			app.SecKillView)
+		g.POST("sec_kill/detail",
+			middleware.LimitMiddleware(100),
+			middleware.AuthMiddleware,
+			middleware.BindJsonMiddleware[seckillapi.SecKillDetailRequest],
+			app.SecKillDetailView)
 	}
 }

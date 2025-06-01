@@ -87,6 +87,7 @@ func (SecKillApi) SecKillView(c *gin.Context) {
 	uid := uuid.String()
 
 	global.Redis.Set(context.Background(), pzKey, uid, 15*time.Minute)
+	global.Redis.Set(context.Background(), "sec:pz_uid:"+uid, string(byteData), 15*time.Minute)
 	go func(pzKey string, key string, field string) {
 		time.Sleep(15 * time.Minute)
 		_uid := global.Redis.Get(context.Background(), pzKey).Val()
