@@ -67,5 +67,13 @@ func (g GoodsModel) BeforeDelete(tx *gorm.DB) (err error) {
 	}
 	logrus.Infof("删除购物车商品 %d 个: goods_id=%d", result.RowsAffected, g.ID)
 
+	// 删除商品评论
+	result = tx.Where("goods_id = ?", g.ID).Delete(&CommentModel{})
+	if result.Error != nil {
+		logrus.Errorf("删除商品评论失败: goods_id=%d, err=%v", g.ID, result.Error)
+		return result.Error
+	}
+	logrus.Infof("删除商品评论 %d 个: goods_id=%d", result.RowsAffected, g.ID)
+
 	return nil
 }
