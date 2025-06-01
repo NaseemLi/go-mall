@@ -17,5 +17,9 @@ func CommentRouter(g *gin.RouterGroup) {
 			middleware.AuthMiddleware,
 			middleware.BindJsonMiddleware[commentapi.CommentCreateRequest],
 			app.CommentCreateView)
+		g.GET("comment",
+			middleware.AuthMiddleware,
+			middleware.BindQueryMiddleware[commentapi.CommentUserListRequest],
+			app.CommentUserListView)
 	}
 }
