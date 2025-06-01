@@ -17,5 +17,9 @@ func SecKillRouter(g *gin.RouterGroup) {
 			middleware.AdminMiddleware,
 			middleware.BindJsonMiddleware[seckillapi.CreateResquest],
 			app.CreateView)
+		g.GET("sec_kill",
+			middleware.AdminMiddleware,
+			middleware.BindQueryMiddleware[seckillapi.ListRequest],
+			app.ListView)
 	}
 }

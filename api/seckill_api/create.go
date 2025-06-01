@@ -64,6 +64,7 @@ func (SecKillApi) CreateView(c *gin.Context) {
 	//创建秒杀
 	err = global.DB.Create(&models.SecKillModel{
 		GoodsID:       cr.GoodsID,
+		GoodsModel:    goods,
 		KillPrice:     cr.KillPrice,
 		KillInventory: cr.KillInventory,
 		StartTime:     startTime,
