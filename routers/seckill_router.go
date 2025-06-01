@@ -13,7 +13,7 @@ func SecKillRouter(g *gin.RouterGroup) {
 
 	// 创建秒杀
 	{
-		g.POST("seckill/create",
+		g.POST("sec_kill",
 			middleware.AdminMiddleware,
 			middleware.BindJsonMiddleware[seckillapi.CreateResquest],
 			app.CreateView)

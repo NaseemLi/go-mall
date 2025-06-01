@@ -32,6 +32,13 @@ func (SecKillApi) CreateView(c *gin.Context) {
 		res.FailWithMsg("开始时间格式错误", c)
 		return
 	}
+
+	//开始时间 不能小于当前时间超过 30 分钟
+	if startTime.Before(time.Now().Add(-30 * time.Minute)) {
+		res.FailWithMsg("开始时间不能小于当前时间超过 30 分钟", c)
+		return
+	}
+
 	endTime := startTime.Add(time.Hour) // 默认结束时间为开始时间后1小时
 	//1.同一个时间节点下，秒杀商品不能重复
 	var model models.SecKillModel
