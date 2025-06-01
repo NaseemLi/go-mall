@@ -8,6 +8,7 @@ import (
 	"fast_gin/models"
 	"fast_gin/utils/res"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -22,6 +23,8 @@ type SecKillRequest struct {
 type SecKillResponse struct {
 	Key string `json:"key"` // 购买凭证
 }
+
+var lock = sync.Mutex{}
 
 func (SecKillApi) SecKillView(c *gin.Context) {
 	cr := middleware.GetBind[SecKillRequest](c)
@@ -43,11 +46,15 @@ func (SecKillApi) SecKillView(c *gin.Context) {
 		return
 	}
 
+	lock.Lock()
+	defer lock.Unlock()
+	//如果需要分布式部署,这个地方需要改为分布式锁
+
 	key := fmt.Sprintf("sec:goods:%s", cr.Date)
 	field := fmt.Sprintf("%d", cr.GoodsID)
 	result, err := global.Redis.HGet(context.Background(), key, field).Result()
 	if err != nil {
-		res.FailWithMsg("秒杀商品不存咋", c)
+		res.FailWithMsg("秒杀商品不存在", c)
 		return
 	}
 
