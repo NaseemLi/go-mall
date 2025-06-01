@@ -11,7 +11,7 @@ import (
 
 type OrderModel struct {
 	Model
-	DeleteAt       *gorm.DeletedAt    `json:"deleteAt"` //删除时间,软删除
+	DeleteAt       *gorm.DeletedAt    `gorm:"index" json:"deleteAt"` //删除时间,软删除
 	UserID         uint               `json:"userID"`
 	UserModel      UserModel          `gorm:"foreignKey:UserID" json:"-"`
 	AddrID         uint               `json:"addrID"`                                         //地址ID

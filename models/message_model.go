@@ -12,6 +12,6 @@ type MessageModel struct {
 	IsRead       bool            `json:"isRead"`  //是否已读
 	GoodsID      uint            `json:"goodsID"` //商品ID
 	GoodsModel   GoodsModel      `gorm:"foreignKey:GoodsID" json:"-"`
-	OrderGoodsID uint            `json:"orderGoodsID"` //订单商品ID
-	DeletedAt    *gorm.DeletedAt `json:"deletedAt"`    // 删除时间
+	OrderGoodsID uint            `json:"orderGoodsID"`           //订单商品ID
+	DeletedAt    *gorm.DeletedAt `gorm:"index" json:"deletedAt"` // 删除时间
 }
