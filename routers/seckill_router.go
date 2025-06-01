@@ -26,5 +26,7 @@ func SecKillRouter(g *gin.RouterGroup) {
 			middleware.AdminMiddleware,
 			middleware.BindJsonMiddleware[models.IDListRequest],
 			app.RemoveView)
+		g.GET("sec_kill/date",
+			app.IndexDateListView)
 	}
 }

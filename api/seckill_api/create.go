@@ -40,6 +40,12 @@ func (SecKillApi) CreateView(c *gin.Context) {
 		return
 	}
 
+	//开始时间 不能大于七天
+	if startTime.After(time.Now().Add(7 * 24 * time.Hour)) {
+		res.FailWithMsg("开始时间不能大于七天", c)
+		return
+	}
+
 	endTime := startTime.Add(time.Hour) // 默认结束时间为开始时间后1小时
 	//1.同一个时间节点下，秒杀商品不能重复
 	var model models.SecKillModel
