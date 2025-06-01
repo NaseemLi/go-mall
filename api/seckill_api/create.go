@@ -4,6 +4,7 @@ import (
 	"fast_gin/global"
 	"fast_gin/middleware"
 	"fast_gin/models"
+	"fast_gin/models/ctype"
 	"fast_gin/utils/res"
 	"time"
 
@@ -21,9 +22,9 @@ func (SecKillApi) CreateView(c *gin.Context) {
 	cr := middleware.GetBind[CreateResquest](c)
 
 	var goods models.GoodsModel
-	err := global.DB.Take(&goods, "id = ?", cr.GoodsID).Error
+	err := global.DB.Take(&goods, "id = ? and status = ?", cr.GoodsID, ctype.GoodsStatusTop).Error
 	if err != nil {
-		res.FailWithMsg("商品不存在", c)
+		res.FailWithMsg("商品不存在或者已下架", c)
 		return
 	}
 

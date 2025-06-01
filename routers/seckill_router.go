@@ -4,6 +4,7 @@ import (
 	"fast_gin/api"
 	seckillapi "fast_gin/api/seckill_api"
 	"fast_gin/middleware"
+	"fast_gin/models"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,5 +22,9 @@ func SecKillRouter(g *gin.RouterGroup) {
 			middleware.AdminMiddleware,
 			middleware.BindQueryMiddleware[seckillapi.ListRequest],
 			app.ListView)
+		g.DELETE("sec_kill",
+			middleware.AdminMiddleware,
+			middleware.BindJsonMiddleware[models.IDListRequest],
+			app.RemoveView)
 	}
 }
