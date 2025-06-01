@@ -4,6 +4,7 @@ import (
 	"fast_gin/api"
 	msgapi "fast_gin/api/msg_api"
 	"fast_gin/middleware"
+	"fast_gin/models"
 
 	"github.com/gin-gonic/gin"
 )
@@ -24,5 +25,10 @@ func MsgRouter(g *gin.RouterGroup) {
 			middleware.AuthMiddleware,
 			middleware.BindQueryMiddleware[msgapi.MsgAdminListRequest],
 			app.MsgAdminListView)
+
+		g.GET("msg/read/:id",
+			middleware.AuthMiddleware,
+			middleware.BindUriMiddleware[models.IDRequest],
+			app.MsgReadView)
 	}
 }
