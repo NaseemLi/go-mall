@@ -10,9 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type OrderAdminRemoveRequest struct {
-}
-
 func (OrderApi) OrderAdminRemoveView(c *gin.Context) {
 	cr := middleware.GetBind[models.IDListRequest](c)
 

@@ -12,20 +12,32 @@ import (
 func MsgRouter(g *gin.RouterGroup) {
 	app := api.App.MsgApi
 
-	// 消息列表
+	// 用户消息相关
 	{
-		//用户消息列表
 		g.GET("msg/user",
 			middleware.AuthMiddleware,
 			middleware.BindQueryMiddleware[msgapi.MsgUserListRequest],
 			app.MsgUserListView)
-
-		//管理员消息列表
-		g.GET("msg/admin",
+		g.DELETE("msg/user",
 			middleware.AuthMiddleware,
+			middleware.BindJsonMiddleware[models.IDListRequest],
+			app.MsgUserRemoveView)
+	}
+
+	// 管理员消息相关
+	{
+		g.GET("msg/admin",
+			middleware.AdminMiddleware,
 			middleware.BindQueryMiddleware[msgapi.MsgAdminListRequest],
 			app.MsgAdminListView)
+		g.DELETE("msg/admin",
+			middleware.AdminMiddleware,
+			middleware.BindJsonMiddleware[models.IDListRequest],
+			app.MsgAdminRemoveView)
+	}
 
+	// 用户标记已读
+	{
 		g.GET("msg/read/:id",
 			middleware.AuthMiddleware,
 			middleware.BindUriMiddleware[models.IDRequest],

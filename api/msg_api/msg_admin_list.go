@@ -28,6 +28,7 @@ func (MsgApi) MsgAdminListView(c *gin.Context) {
 		UserID: cr.UserID,
 	}, common.QueryOption{
 		PageInfo: cr.PageInfo,
+		Unscoped: true,
 		Preloads: []string{"GoodsModel", "UserModel"},
 	})
 
