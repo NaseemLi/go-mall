@@ -13,6 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 type SecKillRequest struct {
@@ -85,7 +86,29 @@ func (SecKillApi) SecKillView(c *gin.Context) {
 	uuid, _ := uuid.NewUUID()
 	uid := uuid.String()
 
-	global.Redis.Set(context.Background(), pzKey, uid, time.Hour)
+	global.Redis.Set(context.Background(), pzKey, uid, 15*time.Minute)
+	go func(pzKey string, key string, field string) {
+		time.Sleep(15 * time.Minute)
+		_uid := global.Redis.Get(context.Background(), pzKey).Val()
+		if _uid == "" {
+			//已经过期了
+			result, err := global.Redis.HGet(context.Background(), key, field).Result()
+			if err != nil {
+				return
+			}
+			var info models.SecKillInfo
+			err = json.Unmarshal([]byte(result), &info)
+			if err != nil {
+				res.FailWithMsg("秒杀商品信息解析失败", c)
+				return
+			}
+
+			info.BuyNum--
+			byteData, _ := json.Marshal(info)
+			global.Redis.HSet(context.Background(), key, field, string(byteData))
+			logrus.Warnf("秒杀商品 %d:%d 购买凭证已过期", info.GoodsID, claims.UserID)
+		}
+	}(pzKey, key, field)
 
 	data := SecKillResponse{
 		Key: uid,
