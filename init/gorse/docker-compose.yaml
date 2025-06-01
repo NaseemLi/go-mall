@@ -1,0 +1,20 @@
+version: "3"
+services:
+  gorse:
+    image: zhenghaoz/gorse-in-one
+    restart: unless-stopped
+    ports:
+      - 8086:8086 # gRPC port
+      - 8088:8088 # HTTP port
+    environment:
+      # Use Redis as cache storage backend.
+      GORSE_CACHE_STORE: redis://192.168.1.20:6379
+      # Use MySQL as data storage backend.
+      GORSE_DATA_STORE: mysql://root:123456@tcp(192.168.1.20:3306)/mall_db?parseTime=true
+    command: >
+      -c /etc/gorse/config.toml
+      --log-path /var/log/gorse/master.log
+      --cache-path /var/lib/gorse/master_cache.data
+    volumes:
+      # Mount the configuration file.
+      - ./config.toml:/etc/gorse/config.toml

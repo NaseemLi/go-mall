@@ -1,0 +1,240 @@
+[database]
+
+# 用于缓存的数据库，支持 Redis、MySQL、Postgres 和 MongoDB。
+#   redis://<user>:<password>@<host>:<port>/<db_number>
+#   rediss://<user>:<password>@<host>:<port>/<db_number>
+#   redis+cluster://<user>:<password>@<host1>:<port1>,<host2>:<port2>,...,<hostN>:<portN>
+#   postgres://bob:secret@1.2.3.4:5432/mydb?sslmode=verify-full
+#   postgresql://bob:secret@1.2.3.4:5432/mydb?sslmode=verify-full
+#   mongodb://[username:password@]host1[:port1][,...hostN[:portN]][/[defaultauthdb][?options]]
+#   mongodb+srv://[username:password@]host1[:port1][,...hostN[:portN]][/[defaultauthdb][?options]]
+cache_store = "redis://localhost:6379/0"
+
+#  用于持久化数据的数据库，支持 MySQL、Postgres、ClickHouse 和 MongoDB。
+#   mysql://[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
+#   postgres://bob:secret@1.2.3.4:5432/mydb?sslmode=verify-full
+#   postgresql://bob:secret@1.2.3.4:5432/mydb?sslmode=verify-full
+#   clickhouse://user:password@host[:port]/database?param1=value1&...&paramN=valueN
+#   chhttp://user:password@host[:port]/database?param1=value1&...&paramN=valueN
+#   chhttps://user:password@host[:port]/database?param1=value1&...&paramN=valueN
+#   mongodb://[username:password@]host1[:port1][,...hostN[:portN]][/[defaultauthdb][?options]]
+#   mongodb+srv://[username:password@]host1[:port1][,...hostN[:portN]][/[defaultauthdb][?options]]
+data_store = "mysql://gorse:gorse_pass@tcp(localhost:3306)/gorse"
+
+# 数据库中表（集合、键）的命名前缀。默认值为空。
+table_prefix = ""
+
+# 缓存存储数据库中表（集合、键）的命名前缀。默认值为 table_prefix。
+cache_table_prefix = ""
+
+# 数据存储数据库中表（集合、键）的命名前缀。默认值为 table_prefix。
+data_table_prefix = ""
+
+[master]
+
+# 主节点的 gRPC 端口。默认值为 8086。
+port = 8086
+
+# 主节点的 gRPC 主机地址。默认值为 0.0.0.0。
+host = "0.0.0.0"
+
+# 主节点的 HTTP 端口。默认值为 8088。
+http_port = 8088
+
+# 主节点的 HTTP 主机地址。默认值为 0.0.0.0。
+http_host = "0.0.0.0"
+
+# 允许的 HTTP Origin 域名列表。可以使用通配符 ".*"。如果为空，则允许所有域名。
+http_cors_domains = []
+
+# 允许的 HTTP 方法列表。如果为空，则允许所有方法。
+http_cors_methods = []
+
+# 主节点的工作任务数量。默认值为 1。
+n_jobs = 1
+
+# 元信息超时时间。默认值为 10s。
+meta_timeout = "10s"
+
+# 主节点仪表盘的用户名。
+dashboard_user_name = ""
+
+# 主节点仪表盘的密码。
+dashboard_password = ""
+
+# 管理员 API 的密钥（需要 SSL）
+admin_api_key = ""
+
+[server]
+
+# 默认返回的推荐项数量。默认值为 10。
+default_n = 10
+
+# RESTful API 的密钥（需要 SSL）。
+api_key = ""
+
+# 集群中的时钟误差。默认值为 5s。
+clock_error = "5s"
+
+# 在插入反馈时自动插入新用户。默认值为 true。
+auto_insert_user = true
+
+# 在插入反馈时自动插入新物品。默认值为 true。
+auto_insert_item = true
+
+# 服务器端缓存的过期时间。默认值为 10s。
+cache_expire = "10s"
+
+[recommend]
+
+# 推荐/热门/最新物品的缓存大小。默认值为 10。
+cache_size = 100
+
+# 推荐缓存的过期时间。默认值为 72h。
+cache_expire = "72h"
+
+[recommend.data_source]
+
+# 正面事件的反馈类型。
+positive_feedback_types = ["star", "like"]
+
+# 阅读事件的反馈类型。
+read_feedback_types = ["read"]
+
+# 正面反馈的生存时间（天），0 表示禁用。默认值为 0。
+positive_feedback_ttl = 0
+
+# 物品的生存时间（天），0 表示禁用。默认值为 0。
+item_ttl = 0
+
+[recommend.popular]
+
+# 热门物品的时间窗口。默认值为 4320h。
+popular_window = "720h"
+
+[recommend.user_neighbors]
+
+# 用户邻居的类型。有三种类型：
+#   similar: 根据共同标签数量查找邻居。
+#   related: 根据共同喜欢的物品数量查找邻居。
+#   auto: 如果用户有标签，根据共同标签数量查找邻居；否则，根据共同喜欢的物品数量查找邻居。
+# 默认值为 "auto"。
+neighbor_type = "similar"
+
+# 启用基于向量索引的近似用户邻居搜索。默认值为 true。
+enable_index = true
+
+# 近似用户邻居搜索的最小召回率。默认值为 0.8。
+index_recall = 0.8
+
+# 近似用户邻居搜索向量索引的最大训练轮数。默认值为 3。
+index_fit_epoch = 3
+
+[recommend.item_neighbors]
+
+# 物品邻居的类型。有三种类型：
+#   similar: 根据共同标签数量查找邻居。
+#   related: 根据共同用户数量查找邻居。
+#   auto: 如果物品有标签，根据共同标签数量查找邻居；否则，根据共同用户数量查找邻居。
+# 默认值为 "auto"。
+neighbor_type = "similar"
+
+# 启用基于向量索引的近似物品邻居搜索。默认值为 true。
+enable_index = true
+
+# 近似物品邻居搜索的最小召回率。默认值为 0.8。
+index_recall = 0.8
+
+# 近似物品邻居搜索向量索引的最大训练轮数。默认值为 3。
+index_fit_epoch = 3
+
+[recommend.collaborative]
+
+# 启用基于向量索引的近似协同过滤推荐。默认值为 true。
+enable_index = true
+
+# 近似协同过滤推荐的最小召回率。默认值为 0.9。
+index_recall = 0.9
+
+# 近似协同过滤推荐向量索引的最大训练轮数。默认值为 3。
+index_fit_epoch = 3
+
+# 模型训练的时间周期。默认值为 "60m"。
+model_fit_period = "60m"
+
+# 模型搜索的时间周期。默认值为 "360m"。
+model_search_period = "360m"
+
+# 模型搜索的训练轮数。默认值为 100。
+model_search_epoch = 100
+
+# 模型搜索的试验次数。默认值为 10。
+model_search_trials = 10
+
+# 启用不同大小模型的搜索（会消耗更多内存）。默认值为 false。
+enable_model_size_search = false
+
+[recommend.replacement]
+
+# 将历史物品重新加入推荐列表。默认值为 false。
+enable_replacement = false
+
+# 正面反馈物品的权重衰减率。默认值为 0.8。
+positive_replacement_decay = 0.8
+
+# 阅读反馈物品的权重衰减率。默认值为 0.6。
+read_replacement_decay = 0.6
+
+[recommend.offline]
+
+# 检查用户推荐的时间周期。默认值为 1m。
+check_recommend_period = "1m"
+
+# 刷新不活跃用户推荐的时间周期。默认值为 120h。
+refresh_recommend_period = "24h"
+
+# 在离线推荐中启用最新推荐。默认值为 false。
+enable_latest_recommend = true
+
+# 在离线推荐中启用热门推荐。默认值为 false。
+enable_popular_recommend = false
+
+# 在离线推荐中启用基于用户的相似推荐。默认值为 false。
+enable_user_based_recommend = true
+
+# 在离线推荐中启用基于物品的相似推荐。默认值为 false。
+enable_item_based_recommend = false
+
+# 在离线推荐中启用协同过滤推荐。默认值为 true。
+enable_collaborative_recommend = true
+
+# 在离线推荐中启用点击率预测。否则，多路推荐的结果将随机合并。默认值为 false。
+enable_click_through_prediction = true
+
+# 探索推荐方法，用于向冷启动用户推荐热门或最新物品。默认值为 { popular = 0.0, latest = 0.0 }。
+explore_recommend = { popular = 0.1, latest = 0.2 }
+
+[recommend.online]
+
+# 当缓存推荐耗尽时的回退推荐方法。默认值为 ["latest"]。
+fallback_recommend = ["item_based", "latest"]
+
+# 回退基于物品相似推荐时使用的反馈数量。默认值为 10。
+num_feedback_fallback_item_based = 10
+
+[tracing]
+
+# 启用 REST API 的追踪功能。默认值为 false。
+enable_tracing = false
+
+# 追踪导出器的类型，可选值为 "jaeger"、"zipkin"、"otlp" 和 "otlphttp"。默认值为 "jaeger"。
+exporter = "jaeger"
+
+# 追踪收集器的端点。
+collector_endpoint = "http://localhost:14268/api/traces"
+
+# 追踪采样器的类型，可选值为 "always"、"never" 和 "ratio"。默认值为 "always"。
+sampler = "always"
+
+# 基于比例的采样器的比例值。默认值为 1。
+ratio = 1
