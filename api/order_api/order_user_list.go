@@ -12,12 +12,13 @@ import (
 )
 
 type OrderUserGoodsInfo struct {
-	GoodsID    uint   `json:"goodsID"`    // 商品ID
-	GoodsCover string `json:"goodsCover"` // 商品封面
-	GoodsTitle string `json:"goodsTitle"` // 商品标题
-	GoodsPrice int    `json:"goodsPrice"` // 商品价格
-	Num        int    `json:"num"`        // 商品数量
-	Note       string `json:"note"`       // 商品备注
+	GoodsID      uint   `json:"goodsID"`      // 商品ID
+	GoodsCover   string `json:"goodsCover"`   // 商品封面
+	GoodsTitle   string `json:"goodsTitle"`   // 商品标题
+	GoodsPrice   int    `json:"goodsPrice"`   // 商品价格
+	Num          int    `json:"num"`          // 商品数量
+	Note         string `json:"note"`         // 商品备注
+	OrderGoodsID uint   `json:"orderGoodsID"` // 订单商品ID
 }
 
 type OrderUserListRequest struct {
@@ -73,11 +74,13 @@ func (OrderApi) OrderUserListView(c *gin.Context) {
 		var goodsList = make([]OrderUserGoodsInfo, 0)
 		for _, v := range item.OrderGoodsList {
 			goodsList = append(goodsList, OrderUserGoodsInfo{
-				GoodsID:    v.GoodsID,
-				GoodsCover: v.GoodsModel.GetCover(),
-				GoodsTitle: v.GoodsModel.Title,
-				GoodsPrice: v.GoodsModel.Price,
-				Note:       v.Note,
+				GoodsID:      v.GoodsID,
+				GoodsCover:   v.GoodsModel.GetCover(),
+				GoodsTitle:   v.GoodsModel.Title,
+				GoodsPrice:   v.GoodsModel.Price,
+				Note:         v.Note,
+				Num:          v.Num,
+				OrderGoodsID: v.ID,
 			})
 		}
 		list = append(list, OrderUserListResponse{
