@@ -17,9 +17,13 @@ func CommentRouter(g *gin.RouterGroup) {
 			middleware.AuthMiddleware,
 			middleware.BindJsonMiddleware[commentapi.CommentCreateRequest],
 			app.CommentCreateView)
-		g.GET("comment",
+		g.GET("comment/user",
 			middleware.AuthMiddleware,
 			middleware.BindQueryMiddleware[commentapi.CommentUserListRequest],
 			app.CommentUserListView)
+		g.GET("comment/admin",
+			middleware.AdminMiddleware,
+			middleware.BindQueryMiddleware[commentapi.CommentAdminListRequest],
+			app.CommentAdminListView)
 	}
 }
