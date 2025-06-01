@@ -28,5 +28,8 @@ func CommentRouter(g *gin.RouterGroup) {
 		g.GET("comment/level",
 			middleware.BindQueryMiddleware[commentapi.CommentLevelListRequest],
 			app.CommentLevelListView)
+		g.GET("comment/goods",
+			middleware.BindQueryMiddleware[commentapi.GoodsCommentListRequest],
+			app.GoodsCommentListView)
 	}
 }
