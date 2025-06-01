@@ -19,8 +19,8 @@ var Options FlagOptions
 
 func Parse() {
 	flag.StringVar(&Options.File, "f", "settings.yaml", "配置文件路径")
-	flag.StringVar(&Options.Menu, "m", "", "菜单 user")
-	flag.StringVar(&Options.Type, "t", "", "类型 create list")
+	flag.StringVar(&Options.Menu, "m", "", "菜单 user gorse")
+	flag.StringVar(&Options.Type, "t", "", "类型 create list sync")
 	flag.BoolVar(&Options.Version, "v", false, "打印当前版本")
 	flag.BoolVar(&Options.DB, "db", false, "迁移表结构")
 	flag.Parse()
@@ -42,6 +42,14 @@ func Run() {
 			user.Create()
 		case "list":
 			user.List()
+		}
+		os.Exit(0)
+	}
+	if Options.Menu == "gorse" {
+		var gorse Gorse
+		switch Options.Type {
+		case "sync":
+			gorse.Sync()
 		}
 		os.Exit(0)
 	}
