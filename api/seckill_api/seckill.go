@@ -58,16 +58,27 @@ func (SecKillApi) SecKillView(c *gin.Context) {
 		return
 	}
 
-	if info.BuyNum > info.KillInventory {
+	if info.BuyNum >= info.KillInventory {
 		res.FailWithMsg("秒杀商品已售罄", c)
 		return
 	}
 
+	pzKey := fmt.Sprintf("sec:pz:%s:%d:%d", cr.Date, info.GoodsID, claims.UserID)
+	_uid := global.Redis.Get(context.Background(), pzKey).Val()
+	if _uid != "" {
+		res.FailWithMsg("您已购买过该商品", c)
+		return
+	}
+
+	//TODO:BuyNum不加问题
+	info.BuyNum++
+	byteData, _ := json.Marshal(info)
+	global.Redis.HSet(context.Background(), key, field, byteData)
+
 	uuid, _ := uuid.NewUUID()
 	uid := uuid.String()
 
-	key = fmt.Sprintf("sec:pz:%s:%d:%d", cr.Date, info.GoodsID, claims.UserID)
-	global.Redis.Set(context.Background(), key, uid, time.Hour)
+	global.Redis.Set(context.Background(), pzKey, uid, time.Hour)
 
 	data := SecKillResponse{
 		Key: uid,
