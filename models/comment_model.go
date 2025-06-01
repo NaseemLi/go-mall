@@ -2,7 +2,8 @@ package models
 
 type CommentModel struct {
 	Model
-	UserID          uint            `json:"userID"` //用户ID
+	UserID          uint            `json:"userID"`  //用户ID
+	OrderID         uint            `json:"orderID"` // 订单ID
 	UserModel       UserModel       `gorm:"foreignKey:UserID" json:"-"`
 	OrderGoodsID    uint            `json:"orderGoodsID"` //商品评价的是这个人下单买的商品
 	OrderGoodsModel OrderGoodsModel `gorm:"foreignKey:OrderGoodsID" json:"-"`

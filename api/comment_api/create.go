@@ -7,6 +7,7 @@ import (
 	"fast_gin/utils/res"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 type CommentOrderGoodsRequest struct {
@@ -66,12 +67,23 @@ func (CommentApi) CommentCreateView(c *gin.Context) {
 			Content:      v.Comment,
 			Level:        v.Level,
 			Images:       v.Images,
+			OrderID:      firstOrder.ID,
 		})
 	}
 
 	if err := global.DB.Create(&list).Error; err != nil {
 		res.FailWithMsg("创建评价失败", c)
 		return
+	}
+
+	//如果这个订单下的商品都评论过了,则改变订单状态
+	var commentList []models.CommentModel
+	global.DB.Preload("OrderModel.OrderGoodsModel").
+		Find(&commentList, "order_id = ?", firstOrder.ID)
+
+	if len(commentList) == len(firstOrder.OrderGoodsList) {
+		global.DB.Model(&firstOrder).Update("status", 5)
+		logrus.Infof("订单 %d 全部商品已评价, 改变订单状态为已完成", firstOrder.ID)
 	}
 
 	res.OkWithMsg("创建评价成功", c)
