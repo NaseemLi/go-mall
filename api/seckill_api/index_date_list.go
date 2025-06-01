@@ -23,8 +23,9 @@ func (SecKillApi) IndexDateListView(c *gin.Context) {
 	for _, item := range keys {
 		_list := strings.Split(item, ":")
 		date := _list[len(_list)-1]
-		dateObj, err := time.Parse("2006-01-02 15", date)
+		dateObj, err := time.Parse("2006-01-02-15", date)
 		if err != nil {
+			//TODO:时间格式错误: parsing time "2025-06-02 02" as "2006-01-02-15": cannot parse " 02" as "-"
 			logrus.Warnf("时间格式错误: %v", err)
 			continue
 		}

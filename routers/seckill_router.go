@@ -28,5 +28,8 @@ func SecKillRouter(g *gin.RouterGroup) {
 			app.RemoveView)
 		g.GET("sec_kill/date",
 			app.IndexDateListView)
+		g.GET("sec_kill/goods",
+			middleware.BindQueryMiddleware[seckillapi.IndexSecKillGoodsListRequest],
+			app.IndexSecKillGoodsListView)
 	}
 }

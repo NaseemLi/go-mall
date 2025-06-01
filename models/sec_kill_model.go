@@ -48,7 +48,7 @@ func (s *SecKillModel) GetSecKillInfo() SecKillInfo {
 }
 
 func (s *SecKillModel) Key() string {
-	return fmt.Sprintf("sec:goods:%s", s.StartTime.Format("2006-01-02 15"))
+	return fmt.Sprintf("sec:goods:%s", s.StartTime.Format("2006-01-02-15"))
 }
 
 func (s *SecKillModel) AfterCreate(tx *gorm.DB) error {
