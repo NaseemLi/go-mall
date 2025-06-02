@@ -1,6 +1,7 @@
 package user_api
 
 import (
+	"fast_gin/core"
 	"fast_gin/global"
 	"fast_gin/middleware"
 	"fast_gin/models"
@@ -49,6 +50,8 @@ func (UserApi) RegisterView(c *gin.Context) {
 		Nickname: "注册用户_" + random.RandStr(5),
 		Password: hashPwd,
 		RoleID:   ctype.UserRole,
+		IP:       c.ClientIP(),
+		Addr:     core.GetAddr(c.ClientIP()),
 	}
 
 	err = global.DB.Create(&user).Error

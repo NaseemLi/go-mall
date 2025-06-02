@@ -1,6 +1,7 @@
 package user_api
 
 import (
+	"fast_gin/core"
 	"fast_gin/global"
 	"fast_gin/middleware"
 	"fast_gin/models"
@@ -55,6 +56,13 @@ func (UserApi) LoginView(c *gin.Context) {
 		res.FailWithMsg("登录失败", c)
 		return
 	}
+
+	global.DB.Create(&models.UserLoginModel{
+		UserID: user.ID,
+		Ip:     c.ClientIP(),
+		Addr:   core.GetAddr(c.ClientIP()),
+		Ua:     c.Request.UserAgent(),
+	})
 
 	res.OkWithData(token, c)
 }

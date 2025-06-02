@@ -26,6 +26,7 @@ func MigrateDB() {
 		&models.Feedback{},
 		&models.Item{},
 		&models.User{},
+		&models.UserLoginModel{},
 	)
 	if err != nil {
 		logrus.Errorf("表结构迁移失败 %s", err)

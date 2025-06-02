@@ -18,6 +18,8 @@ type UserModel struct {
 	Password string     `gorm:"size:64" json:"-"`
 	Avatar   string     `json:"avatar"`
 	RoleID   ctype.Role `json:"roleID"` // 1 管理员 2 普通用户
+	IP       string     `gorm:"size:32" json:"ip"`
+	Addr     string     `gorm:"size:64" json:"addr"`
 }
 
 func (u UserModel) BeforeDelete(tx *gorm.DB) (err error) {

@@ -14,5 +14,8 @@ func DataRouter(g *gin.RouterGroup) {
 		g.GET("data/user",
 			middleware.AuthMiddleware,
 			app.StatisticsUserView)
+		g.GET("data/system",
+			middleware.AdminMiddleware,
+			app.StatisticsSystemView)
 	}
 }
