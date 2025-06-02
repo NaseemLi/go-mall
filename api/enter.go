@@ -5,6 +5,7 @@ import (
 	carapi "fast_gin/api/car_api"
 	commentapi "fast_gin/api/comment_api"
 	couponapi "fast_gin/api/coupon_api"
+	dataapi "fast_gin/api/data_api"
 	goodsapi "fast_gin/api/goods_api"
 	"fast_gin/api/image_api"
 	msgapi "fast_gin/api/msg_api"
@@ -26,6 +27,7 @@ type Api struct {
 	CommentApi    commentapi.CommentApi
 	MsgApi        msgapi.MsgApi
 	SecKillApi    seckillapi.SecKillApi
+	DataApi       dataapi.DataApi
 }
 
 var App = new(Api)

@@ -25,6 +25,7 @@ func Run() {
 	CommentRouter(g)
 	MsgRouter(g)
 	SecKillRouter(g)
+	DataRouter(g)
 
 	addr := global.Config.System.Addr()
 	if global.Config.System.Mode == "release" {
