@@ -17,7 +17,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const waitTime = 120 // 延时处理时间，单位为秒 15min=900s
+const waitTime = 900 // 延时处理时间，单位为秒 15min=900s
 const queue = "delay_order_queue"
 
 // 添加订单到延时队列
@@ -68,107 +68,151 @@ var lock = &sync.Mutex{}
 
 // 执行单个订单超时处理
 func OrderDelay(no string) {
-	logrus.Infof("[订单处理] 开始处理订单: %s", no)
+	logrus.WithField("order_no", no).Info("[订单处理] 开始处理订单")
 
 	var model models.OrderModel
 	err := global.DB.Take(&model, "no = ?", no).Error
 	if err != nil {
-		logrus.Warnf("[订单处理] 查询失败，订单不存在: %s", no)
+		logrus.WithField("order_no", no).Warn("[订单处理] 查询失败，订单不存在")
 		return
 	}
 
-	// 判断订单状态是否为待支付
 	if model.Status != 1 {
-		logrus.Infof("[订单处理] 订单状态非待支付，跳过处理: %s", no)
+		logrus.WithFields(logrus.Fields{
+			"order_no": no,
+			"status":   model.Status,
+		}).Info("[订单处理] 订单状态非待支付，跳过处理")
 		return
 	}
 
 	lock.Lock()
 	defer lock.Unlock()
 
-	// 执行订单超时事务处理
 	err = global.DB.Transaction(func(tx *gorm.DB) error {
 		if model.PzKey != "" {
-			//秒杀订单,商品-1
-			pzUidKey := fmt.Sprintf("sec:pz_uid:%s", model.PzKey)
+			uid := global.Redis.Get(context.Background(), model.PzKey).Val()
+			if uid == "" {
+				logrus.WithFields(logrus.Fields{
+					"order_no": no,
+					"pz_key":   model.PzKey,
+				}).Warn("[订单处理] 凭证已过期，UID 不存在")
+				return nil
+			}
+
+			pzUidKey := fmt.Sprintf("sec:pz_uid:%s", uid)
 			val := global.Redis.Get(context.Background(), pzUidKey).Val()
 			if val == "" {
-				logrus.Warnf("[订单处理] 秒杀商品已经过期: %s", no)
+				logrus.WithFields(logrus.Fields{
+					"order_no":   no,
+					"pz_uid_key": pzUidKey,
+				}).Warn("[订单处理] 凭证信息已失效，跳过库存回退")
 				return nil
 			}
 
 			var pzInfo redis_ser.PZinfo
-			err = json.Unmarshal([]byte(val), &pzInfo)
+			err := json.Unmarshal([]byte(val), &pzInfo)
 			if err != nil {
-				logrus.Warnf("[订单处理] 秒杀凭证信息解析失败: %s", no)
+				logrus.WithFields(logrus.Fields{
+					"order_no":   no,
+					"pz_uid_key": pzUidKey,
+					"err":        err,
+				}).Warn("[订单处理] 凭证信息解析失败")
 				return nil
 			}
-			_list := strings.Split(pzInfo.PZKey, ":")
-			date := _list[2]
-			field := _list[3]
 
+			parts := strings.Split(pzInfo.PZKey, ":")
+			if len(parts) < 4 {
+				logrus.WithFields(logrus.Fields{
+					"order_no": no,
+					"pz_key":   pzInfo.PZKey,
+				}).Warn("[订单处理] PZKey 格式非法")
+				return nil
+			}
+
+			date := parts[2]
+			field := parts[3]
 			hashKey := fmt.Sprintf("sec:goods:%s", date)
 			val = global.Redis.HGet(context.Background(), hashKey, field).Val()
 			if val == "" {
-				logrus.Infof("[订单处理] 秒杀商品已经过期: %s", no)
+				logrus.WithFields(logrus.Fields{
+					"order_no": no,
+					"hash_key": hashKey,
+					"field":    field,
+				}).Warn("[订单处理] Redis 秒杀商品信息缺失")
 				return nil
 			}
 
 			var info models.SecKillInfo
 			err = json.Unmarshal([]byte(val), &info)
 			if err != nil {
-				logrus.Warnf("[订单处理] 秒杀商品信息解析失败: %s", no)
+				logrus.WithFields(logrus.Fields{
+					"order_no": no,
+					"err":      err,
+				}).Warn("[订单处理] 秒杀商品信息解析失败")
 				return nil
 			}
+
 			info.BuyNum--
 			byteData, _ := json.Marshal(info)
 			global.Redis.HSet(context.Background(), hashKey, field, string(byteData))
-			//将上面两个 key 失效
-			//TODO:凭证过期问题
 			global.Redis.Del(context.Background(), pzInfo.PZKey)
 			global.Redis.Del(context.Background(), pzUidKey)
 
+			logrus.WithFields(logrus.Fields{
+				"order_no": no,
+				"goods_id": info.GoodsID,
+				"buy_num":  info.BuyNum,
+				"hash_key": hashKey,
+				"field":    field,
+				"pz_uid":   uid,
+				"pz_key":   pzInfo.PZKey,
+			}).Info("[订单处理] 秒杀订单库存已回退并清除凭证")
 			return nil
 		}
-		// 更新订单状态
-		tx.Model(&model).Update("status", 7)
-		logrus.Infof("[订单处理] 订单标记为超时: %s", no)
 
-		// 释放购物车
+		tx.Model(&model).Update("status", 7)
+		logrus.WithField("order_no", no).Info("[订单处理] 非秒杀订单已标记为超时")
+
 		var carList []models.CarModel
-		err := global.DB.Where("id in ?", model.CarIDList).Find(&carList).Error
-		if err != nil {
-			logrus.Errorf("[订单处理] 查询购物车失败: %s", no)
+		if err := global.DB.Where("id in ?", model.CarIDList).Find(&carList).Error; err != nil {
+			logrus.WithFields(logrus.Fields{
+				"order_no": no,
+				"err":      err,
+			}).Error("[订单处理] 查询购物车失败")
 			return err
 		}
 		if len(carList) > 0 {
 			tx.Model(&carList).Update("status", 0)
-			logrus.Infof("[订单处理] 已释放购物车: %s", no)
+			logrus.WithField("order_no", no).Info("[订单处理] 已释放购物车资源")
 		}
 
-		// 归还优惠券
 		var userCoupon []models.UserCouponModel
 		var userCouponIDList []uint
 		for _, v := range model.UserCouponList {
 			userCouponIDList = append(userCouponIDList, v.UserCouponID)
 		}
-		err = global.DB.Where("id in ?", userCouponIDList).Find(&userCoupon).Error
-		if err != nil {
-			logrus.Errorf("[订单处理] 查询优惠券失败: %s", no)
+		if err := global.DB.Where("id in ?", userCouponIDList).Find(&userCoupon).Error; err != nil {
+			logrus.WithFields(logrus.Fields{
+				"order_no": no,
+				"err":      err,
+			}).Error("[订单处理] 查询优惠券失败")
 			return err
 		}
 		if len(userCoupon) > 0 {
 			tx.Model(&userCoupon).Update("status", ctype.CouponStatusNotUsed)
-			logrus.Infof("[订单处理] 已归还优惠券: %s", no)
+			logrus.WithField("order_no", no).Info("[订单处理] 已归还用户优惠券")
 		}
 
 		return nil
 	})
 
 	if err != nil {
-		logrus.Errorf("[订单处理] 订单处理失败: %s, err: %v", no, err)
+		logrus.WithFields(logrus.Fields{
+			"order_no": no,
+			"err":      err,
+		}).Error("[订单处理] 超时订单处理失败")
 		return
 	}
 
-	logrus.Infof("[订单处理] 超时订单处理完成: %s", no)
+	logrus.WithField("order_no", no).Info("[订单处理] 超时订单处理完成")
 }
