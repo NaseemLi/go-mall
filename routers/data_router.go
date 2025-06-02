@@ -23,5 +23,8 @@ func DataRouter(g *gin.RouterGroup) {
 		g.GET("data/order_trend",
 			middleware.AdminMiddleware,
 			app.OrderTrendView)
+		g.GET("data/computer",
+			middleware.AdminMiddleware,
+			app.ComputerView)
 	}
 }
