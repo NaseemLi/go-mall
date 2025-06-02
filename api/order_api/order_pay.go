@@ -11,6 +11,7 @@ import (
 	"fast_gin/utils/res"
 	"fmt"
 	"sort"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -32,6 +33,8 @@ type OrderPayResponse struct {
 	Price  int    `json:"price"`
 }
 
+var lock = sync.Mutex{}
+
 func (OrderApi) OrderPayView(c *gin.Context) {
 	cr := middleware.GetBind[OrderPayRequest](c)
 	claims := middleware.GetAuth(c)
@@ -42,6 +45,9 @@ func (OrderApi) OrderPayView(c *gin.Context) {
 		res.FailWithMsg("地址不存在", c)
 		return
 	}
+
+	lock.Lock()
+	defer lock.Unlock()
 
 	var myCouponList []models.UserCouponModel
 	var goodsCouponMap = map[uint]models.UserCouponModel{}
@@ -240,6 +246,15 @@ func (OrderApi) OrderPayView(c *gin.Context) {
 				return err
 			}
 		}
+
+		//预扣库存
+		for _, v := range GoodsList {
+			if v.Inventory == nil {
+				continue
+			}
+			tx.Model(&v).Update("inventory", gorm.Expr("inventory - 1"))
+		}
+
 		return nil
 	})
 	if err != nil {

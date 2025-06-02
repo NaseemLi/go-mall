@@ -27,6 +27,7 @@ func (OrderApi) OrderPayCallbackView(c *gin.Context) {
 	err := global.DB.
 		Select("*").
 		Preload("UserCouponList.UserCouponModel").
+		Preload("OrderGoodsList").
 		Take(&order, "no = ?", cr.No).Error
 	if err != nil {
 		res.FailWithMsg("订单不存在", c)
@@ -117,6 +118,15 @@ func (OrderApi) OrderPayCallbackView(c *gin.Context) {
 						return err
 					}
 				}
+				//普通商品购买完成销量+1
+				var goodsIDList []uint
+				for _, v := range order.OrderGoodsList {
+					goodsIDList = append(goodsIDList, v.GoodsID)
+				}
+
+				var goodsList []models.GoodsModel
+				tx.Find(&goodsList, "id in ?", goodsIDList)
+				tx.Model(&goodsList).Update("sales_num", gorm.Expr("sales_num + 1"))
 			}
 		}
 		return nil

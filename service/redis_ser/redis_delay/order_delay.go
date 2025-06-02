@@ -71,7 +71,7 @@ func OrderDelay(no string) {
 	logrus.WithField("order_no", no).Info("[订单处理] 开始处理订单")
 
 	var model models.OrderModel
-	err := global.DB.Take(&model, "no = ?", no).Error
+	err := global.DB.Preload("OrderGoodsList").Take(&model, "no = ?", no).Error
 	if err != nil {
 		logrus.WithField("order_no", no).Warn("[订单处理] 查询失败，订单不存在")
 		return
@@ -172,6 +172,21 @@ func OrderDelay(no string) {
 
 		tx.Model(&model).Update("status", 7)
 		logrus.WithField("order_no", no).Info("[订单处理] 非秒杀订单已标记为超时")
+
+		//正产的订单 订单过期 将库存+1
+		var goodsIDList []uint
+		for _, v := range model.OrderGoodsList {
+			goodsIDList = append(goodsIDList, v.GoodsID)
+		}
+
+		var goodsList []models.GoodsModel
+		tx.Find(&goodsList, "id in ?", goodsIDList)
+		for _, v := range goodsList {
+			if v.Inventory == nil {
+				continue
+			}
+			tx.Model(&v).Update("inventory", gorm.Expr("inventory + 1"))
+		}
 
 		var carList []models.CarModel
 		if err := global.DB.Where("id in ?", model.CarIDList).Find(&carList).Error; err != nil {
