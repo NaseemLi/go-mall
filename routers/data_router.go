@@ -17,5 +17,8 @@ func DataRouter(g *gin.RouterGroup) {
 		g.GET("data/system",
 			middleware.AdminMiddleware,
 			app.StatisticsSystemView)
+		g.GET("data/user_trend",
+			middleware.AdminMiddleware,
+			app.UserLoginTrendView)
 	}
 }
