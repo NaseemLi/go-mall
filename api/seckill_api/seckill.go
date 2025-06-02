@@ -81,7 +81,6 @@ func (SecKillApi) SecKillView(c *gin.Context) {
 		return
 	}
 
-	//TODO:BuyNum不加问题
 	info.BuyNum++
 	byteData, _ := json.Marshal(info)
 	global.Redis.HSet(context.Background(), key, field, byteData)
@@ -110,7 +109,7 @@ func (SecKillApi) SecKillView(c *gin.Context) {
 		var info models.SecKillInfo
 		err = json.Unmarshal([]byte(result), &info)
 		if err != nil {
-			res.FailWithMsg("秒杀商品信息解析失败", c)
+			logrus.Errorf("回退库存失败: 秒杀商品信息解析失败，field=%s key=%s", field, key)
 			return
 		}
 

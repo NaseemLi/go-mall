@@ -116,9 +116,8 @@ func (SecKillApi) SecKillOrderView(c *gin.Context) {
 	//延时队列
 	redisdelay.AddOrderDelay(data.No)
 	//延长凭证时间
-	//TODO:延时问题
-	global.Redis.Expire(context.Background(), info.PZKey, 20*time.Minute)
-	global.Redis.Expire(context.Background(), "sec:pz_uid:"+cr.Key, 20*time.Minute)
+	global.Redis.Expire(context.Background(), info.PZKey, 15*time.Minute)
+	global.Redis.Expire(context.Background(), "sec:pz_uid:"+cr.Key, 15*time.Minute)
 
 	res.OkWithData(data, c)
 }

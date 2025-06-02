@@ -24,11 +24,19 @@ func (OrderApi) OrderPayCallbackView(c *gin.Context) {
 	cr := middleware.GetBind[OrderPayCallbackRequest](c)
 
 	var order models.OrderModel
-	err := global.DB.Preload("UserCouponList.UserCouponModel").Take(&order, "no = ?", cr.No).Error
+	err := global.DB.
+		Select("*").
+		Preload("UserCouponList.UserCouponModel").
+		Take(&order, "no = ?", cr.No).Error
 	if err != nil {
 		res.FailWithMsg("订单不存在", c)
 		return
 	}
+
+	logrus.WithFields(logrus.Fields{
+		"order_no": order.No,
+		"pz_key":   order.PzKey,
+	}).Info("收到订单支付回调")
 
 	if order.Status != 1 {
 		res.FailWithMsg("订单状态异常,请勿支付", c)
@@ -36,41 +44,66 @@ func (OrderApi) OrderPayCallbackView(c *gin.Context) {
 	}
 
 	err = global.DB.Transaction(func(tx *gorm.DB) error {
-		//改订单状态
-		tx.Model(&order).Where("no = ?", cr.No).Update("status", 2) // 2已付款/待发货
+		// 更新订单状态为已付款
+		tx.Model(&order).Where("no = ?", cr.No).Update("status", 2)
+
 		if order.PzKey != "" {
-			//订单支付完成,延长凭证
-			pzUidKey := fmt.Sprintf("sec:pz_uid:%s", order.PzKey)
+			uid := global.Redis.Get(context.Background(), order.PzKey).Val()
+			if uid == "" {
+				logrus.WithFields(logrus.Fields{
+					"order_no": order.No,
+					"pz_key":   order.PzKey,
+				}).Warn("从 Redis 获取 UID 失败，凭证已过期")
+				return nil
+			}
+
+			pzUidKey := fmt.Sprintf("sec:pz_uid:%s", uid)
 			val := global.Redis.Get(context.Background(), pzUidKey).Val()
 			if val == "" {
-				logrus.Warnf("[订单处理] 秒杀商品已经过期")
+				logrus.WithFields(logrus.Fields{
+					"uid":       uid,
+					"pz_uidKey": pzUidKey,
+				}).Warn("凭证 JSON 未找到，可能已过期")
 				return nil
 			}
 
 			var pzInfo redis_ser.PZinfo
-			err = json.Unmarshal([]byte(val), &pzInfo)
-			if err != nil {
-				logrus.Warnf("[订单处理] 秒杀凭证信息解析失败: %s", order.PzKey)
+			if err := json.Unmarshal([]byte(val), &pzInfo); err != nil {
+				logrus.WithFields(logrus.Fields{
+					"uid":    uid,
+					"rawval": val,
+				}).Warn("凭证信息解析失败")
 				return nil
 			}
 
-			global.Redis.Expire(context.Background(), pzUidKey, 60*time.Second)
-			global.Redis.Expire(context.Background(), pzInfo.PZKey, 60*time.Second)
+			ok1, err1 := global.Redis.Expire(context.Background(), pzUidKey, 60*time.Minute).Result()
+			ok2, err2 := global.Redis.Expire(context.Background(), pzInfo.PZKey, 60*time.Minute).Result()
+
+			logrus.WithFields(logrus.Fields{
+				"pz_uid_key": pzUidKey,
+				"success":    ok1,
+				"err":        err1,
+			}).Info("重置 TTL 成功（UID凭证）")
+
+			logrus.WithFields(logrus.Fields{
+				"pz_key":  pzInfo.PZKey,
+				"success": ok2,
+				"err":     err2,
+			}).Info("重置 TTL 成功（用户凭证）")
 		}
 
-		//如果有购物车,清空购物车
+		// 清空购物车
 		if len(order.CarIDList) > 0 {
 			var carList []models.CarModel
 			tx.Find(&carList, "id IN ?", order.CarIDList)
 			if len(carList) > 0 {
-				err := tx.Delete(&carList).Error
-				if err != nil {
+				if err := tx.Delete(&carList).Error; err != nil {
 					return err
 				}
 			}
 		}
 
-		//如果使用了优惠卷,就修改优惠卷状态
+		// 删除已使用的优惠券
 		if len(order.UserCouponList) > 0 {
 			var userCouponIDList []uint
 			for _, v := range order.UserCouponList {
@@ -80,8 +113,7 @@ func (OrderApi) OrderPayCallbackView(c *gin.Context) {
 			tx.Find(&userCouponList, "id IN ?", userCouponIDList)
 			if len(userCouponList) > 0 {
 				for _, coupon := range userCouponList {
-					err := tx.Delete(&coupon).Error
-					if err != nil {
+					if err := tx.Delete(&coupon).Error; err != nil {
 						return err
 					}
 				}
@@ -91,9 +123,14 @@ func (OrderApi) OrderPayCallbackView(c *gin.Context) {
 	})
 
 	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"order_no": cr.No,
+			"error":    err,
+		}).Error("订单支付事务失败")
 		res.FailWithMsg("订单支付失败", c)
 		return
 	}
 
+	logrus.WithField("order_no", cr.No).Info("订单支付成功")
 	res.OkWithMsg("订单支付成功", c)
 }

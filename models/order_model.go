@@ -26,7 +26,7 @@ type OrderModel struct {
 	PayTime        time.Time          `json:"payTime"`                                        //支付时间
 	PayUrl         string             `json:"payUrl"`                                         //支付链接
 	CarIDList      []uint             `gorm:"type:longtext;serializer:json" json:"carIDList"` //购物车ID列表
-	PzKey          string             `json:"pzKey"`                                          // 购买凭证,如果带有则是秒杀
+	PzKey          string             `gorm:"column:pz_key" json:"pzKey"`                     // 购买凭证,如果带有则是秒杀
 }
 
 func (o *OrderModel) BeforeDelete(tx *gorm.DB) error {
