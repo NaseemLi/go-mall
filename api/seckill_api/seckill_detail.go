@@ -28,7 +28,7 @@ func (SecKillApi) SecKillDetailView(c *gin.Context) {
 		return
 	}
 
-	var info models.SecKillInfo
+	var info PZinfo
 	err := json.Unmarshal([]byte(val), &info)
 	if err != nil {
 		res.FailWithMsg("秒杀商品信息Json解析失败", c)
@@ -36,7 +36,7 @@ func (SecKillApi) SecKillDetailView(c *gin.Context) {
 	}
 
 	data := SecKillDetailResponse{
-		SecKillInfo: info,
+		SecKillInfo: info.GoodsInfo,
 	}
 
 	res.OkWithData(data, c)

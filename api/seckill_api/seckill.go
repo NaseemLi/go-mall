@@ -16,6 +16,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+type PZinfo struct {
+	PZKey     string             `json:"PZKey"`     // 购买凭证
+	GoodsInfo models.SecKillInfo `json:"GoodsInfo"` // 商品信息
+}
+
 type SecKillRequest struct {
 	Date    string `json:"date" binding:"required"`    // 秒杀日期
 	GoodsID uint   `json:"goodsID" binding:"required"` // 商品ID
@@ -87,28 +92,35 @@ func (SecKillApi) SecKillView(c *gin.Context) {
 	uid := uuid.String()
 
 	global.Redis.Set(context.Background(), pzKey, uid, 15*time.Minute)
-	global.Redis.Set(context.Background(), "sec:pz_uid:"+uid, string(byteData), 15*time.Minute)
+	pzInfoByteData, _ := json.Marshal(PZinfo{
+		PZKey:     uid,
+		GoodsInfo: info,
+	})
+	global.Redis.Set(context.Background(), "sec:pz_uid:"+uid, string(pzInfoByteData), 15*time.Minute)
 	go func(pzKey string, key string, field string) {
 		time.Sleep(15 * time.Minute)
 		_uid := global.Redis.Get(context.Background(), pzKey).Val()
-		if _uid == "" {
-			//已经过期了
-			result, err := global.Redis.HGet(context.Background(), key, field).Result()
-			if err != nil {
-				return
-			}
-			var info models.SecKillInfo
-			err = json.Unmarshal([]byte(result), &info)
-			if err != nil {
-				res.FailWithMsg("秒杀商品信息解析失败", c)
-				return
-			}
-
-			info.BuyNum--
-			byteData, _ := json.Marshal(info)
-			global.Redis.HSet(context.Background(), key, field, string(byteData))
-			logrus.Warnf("秒杀商品 %d:%d 购买凭证已过期", info.GoodsID, claims.UserID)
+		if _uid != "" {
+			//说明凭证已经延期了
+			return
 		}
+		//已经过期了
+		result, err := global.Redis.HGet(context.Background(), key, field).Result()
+		if err != nil {
+			return
+		}
+		var info models.SecKillInfo
+		err = json.Unmarshal([]byte(result), &info)
+		if err != nil {
+			res.FailWithMsg("秒杀商品信息解析失败", c)
+			return
+		}
+
+		info.BuyNum--
+		byteData, _ := json.Marshal(info)
+		global.Redis.HSet(context.Background(), key, field, string(byteData))
+		logrus.Warnf("秒杀商品 %d:%d 购买凭证已过期", info.GoodsID, claims.UserID)
+
 	}(pzKey, key, field)
 
 	data := SecKillResponse{
