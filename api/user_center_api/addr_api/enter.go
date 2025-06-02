@@ -39,7 +39,8 @@ func (AddrApi) AddrCreateView(c *gin.Context) {
 
 	//四个信息不能完全一样
 	var model models.AddrModel
-	err = global.DB.Take(&model, "name = ? AND tel = ? AND addr = ? AND detail_addr = ?", cr.Name, cr.Tel, cr.Addr, cr.DetailAddr).Error
+	err = global.DB.Take(&model, "user_id = ? AND name = ? AND tel = ? AND addr = ? AND detail_addr = ?",
+		user.ID, cr.Name, cr.Tel, cr.Addr, cr.DetailAddr).Error
 	if err == nil {
 		res.FailWithMsg("地址已存在", c)
 		return
@@ -107,7 +108,8 @@ func (AddrApi) AddrUpdateView(c *gin.Context) {
 
 	//改了之后和之前的一样
 	var _model models.AddrModel
-	err = global.DB.Take(&_model, "name = ? AND tel = ? AND addr = ? AND detail_addr = ? and id != ?", cr.Name, cr.Tel, cr.Addr, cr.DetailAddr, cr.ID).Error
+	err = global.DB.Take(&_model, "name = ? AND tel = ? AND addr = ? AND detail_addr = ? and id != ?",
+		cr.Name, cr.Tel, cr.Addr, cr.DetailAddr, cr.ID).Error
 	if err == nil {
 		res.FailWithMsg("此次修改与之前配置重复", c)
 		return
