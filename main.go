@@ -12,6 +12,7 @@ import (
 func main() {
 	core.InitLogger()
 	flags.Parse()
+	core.InitIPDB()
 	global.Config = core.ReadConfig()
 	global.DB = core.InitGorm()
 	global.Redis = core.InitRedis()

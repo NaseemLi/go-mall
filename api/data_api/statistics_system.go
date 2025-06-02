@@ -29,7 +29,6 @@ func (DataApi) StatisticsSystemView(c *gin.Context) {
 	global.DB.Model(models.SecKillModel{}).Count(&data.SecKillNum)
 	global.DB.Model(models.OrderModel{}).Where("status not in ?", []int8{1, 6, 7}).Count(&data.SussessOrderNum)
 	//TODO:今日的登录数据
-	//今日的登录数据
 	global.DB.Model(models.UserLoginModel{}).Where("date(created_at) = date(now())").Count(&data.NewLoginCount)
 
 	var orderList []models.OrderModel
