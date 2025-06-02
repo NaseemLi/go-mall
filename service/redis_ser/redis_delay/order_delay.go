@@ -104,10 +104,6 @@ func OrderDelay(no string) {
 				return nil
 			}
 			_list := strings.Split(pzInfo.PZKey, ":")
-			if len(_list) != 5 {
-				logrus.Warnf("[订单处理] pzKey 结构非法，长度异常：%s", pzInfo.PZKey)
-				return err
-			}
 			date := _list[2]
 			field := _list[3]
 
@@ -127,6 +123,10 @@ func OrderDelay(no string) {
 			info.BuyNum--
 			byteData, _ := json.Marshal(info)
 			global.Redis.HSet(context.Background(), hashKey, field, string(byteData))
+			//将上面两个 key 失效
+			//TODO:凭证过期问题
+			global.Redis.Del(context.Background(), pzInfo.PZKey)
+			global.Redis.Del(context.Background(), pzUidKey)
 
 			return nil
 		}

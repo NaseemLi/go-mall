@@ -1,12 +1,18 @@
 package orderapi
 
 import (
+	"context"
+	"encoding/json"
 	"fast_gin/global"
 	"fast_gin/middleware"
 	"fast_gin/models"
+	"fast_gin/service/redis_ser"
 	"fast_gin/utils/res"
+	"fmt"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -32,6 +38,25 @@ func (OrderApi) OrderPayCallbackView(c *gin.Context) {
 	err = global.DB.Transaction(func(tx *gorm.DB) error {
 		//改订单状态
 		tx.Model(&order).Where("no = ?", cr.No).Update("status", 2) // 2已付款/待发货
+		if order.PzKey != "" {
+			//订单支付完成,延长凭证
+			pzUidKey := fmt.Sprintf("sec:pz_uid:%s", order.PzKey)
+			val := global.Redis.Get(context.Background(), pzUidKey).Val()
+			if val == "" {
+				logrus.Warnf("[订单处理] 秒杀商品已经过期")
+				return nil
+			}
+
+			var pzInfo redis_ser.PZinfo
+			err = json.Unmarshal([]byte(val), &pzInfo)
+			if err != nil {
+				logrus.Warnf("[订单处理] 秒杀凭证信息解析失败: %s", order.PzKey)
+				return nil
+			}
+
+			global.Redis.Expire(context.Background(), pzUidKey, 60*time.Second)
+			global.Redis.Expire(context.Background(), pzInfo.PZKey, 60*time.Second)
+		}
 
 		//如果有购物车,清空购物车
 		if len(order.CarIDList) > 0 {
