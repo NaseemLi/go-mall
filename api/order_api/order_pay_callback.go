@@ -27,7 +27,7 @@ func (OrderApi) OrderPayCallbackView(c *gin.Context) {
 	err := global.DB.
 		Select("*").
 		Preload("UserCouponList.UserCouponModel").
-		Preload("OrderGoodsList").
+		Preload("OrderGoodsList.GoodsModel").
 		Take(&order, "no = ?", cr.No).Error
 	if err != nil {
 		res.FailWithMsg("订单不存在", c)
@@ -84,13 +84,13 @@ func (OrderApi) OrderPayCallbackView(c *gin.Context) {
 				"pz_uid_key": pzUidKey,
 				"success":    ok1,
 				"err":        err1,
-			}).Info("重置 TTL 成功（UID凭证）")
+			}).Info("重置 TTL 成功 (UID凭证)")
 
 			logrus.WithFields(logrus.Fields{
 				"pz_key":  pzInfo.PZKey,
 				"success": ok2,
 				"err":     err2,
-			}).Info("重置 TTL 成功（用户凭证）")
+			}).Info("重置 TTL 成功 (用户凭证)")
 		}
 
 		// 清空购物车
@@ -119,14 +119,11 @@ func (OrderApi) OrderPayCallbackView(c *gin.Context) {
 					}
 				}
 				//普通商品购买完成销量+1
-				var goodsIDList []uint
 				for _, v := range order.OrderGoodsList {
-					goodsIDList = append(goodsIDList, v.GoodsID)
+					goodsModel := v.GoodsModel
+					tx.Find(&goodsModel, "id in ?", goodsModel.ID)
+					tx.Model(&goodsModel).Update("sales_num", gorm.Expr("sales_num + ?", v.Num))
 				}
-
-				var goodsList []models.GoodsModel
-				tx.Find(&goodsList, "id in ?", goodsIDList)
-				tx.Model(&goodsList).Update("sales_num", gorm.Expr("sales_num + 1"))
 			}
 		}
 		return nil

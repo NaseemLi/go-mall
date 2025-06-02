@@ -252,7 +252,7 @@ func (OrderApi) OrderPayView(c *gin.Context) {
 			if v.Inventory == nil {
 				continue
 			}
-			tx.Model(&v).Update("inventory", gorm.Expr("inventory - 1"))
+			tx.Model(&v).Update("inventory", gorm.Expr("inventory - ?", orderGoodsMap[v.ID].Num))
 		}
 
 		return nil
