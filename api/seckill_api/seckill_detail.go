@@ -6,6 +6,7 @@ import (
 	"fast_gin/global"
 	"fast_gin/middleware"
 	"fast_gin/models"
+	"fast_gin/service/redis_ser"
 	"fast_gin/utils/res"
 
 	"github.com/gin-gonic/gin"
@@ -28,7 +29,7 @@ func (SecKillApi) SecKillDetailView(c *gin.Context) {
 		return
 	}
 
-	var info PZinfo
+	var info redis_ser.PZinfo
 	err := json.Unmarshal([]byte(val), &info)
 	if err != nil {
 		res.FailWithMsg("秒杀商品信息Json解析失败", c)

@@ -7,6 +7,7 @@ import (
 	"fast_gin/middleware"
 	"fast_gin/models"
 	payser "fast_gin/service/pay_ser"
+	"fast_gin/service/redis_ser"
 	redisdelay "fast_gin/service/redis_ser/redis_delay"
 	"fast_gin/utils/random"
 	"fast_gin/utils/res"
@@ -49,7 +50,7 @@ func (SecKillApi) SecKillOrderView(c *gin.Context) {
 		return
 	}
 
-	var info PZinfo
+	var info redis_ser.PZinfo
 	err = json.Unmarshal([]byte(val), &info)
 	if err != nil {
 		res.FailWithMsg("秒杀商品信息Json解析失败", c)
@@ -115,8 +116,9 @@ func (SecKillApi) SecKillOrderView(c *gin.Context) {
 	//延时队列
 	redisdelay.AddOrderDelay(data.No)
 	//延长凭证时间
-	global.Redis.Expire(context.Background(), info.PZKey, 15*time.Minute)
-	global.Redis.Expire(context.Background(), "sec:pz_uid:"+cr.Key, 15*time.Minute)
+	//TODO:延时问题
+	global.Redis.Expire(context.Background(), info.PZKey, 20*time.Minute)
+	global.Redis.Expire(context.Background(), "sec:pz_uid:"+cr.Key, 20*time.Minute)
 
 	res.OkWithData(data, c)
 }

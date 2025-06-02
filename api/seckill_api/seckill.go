@@ -6,6 +6,7 @@ import (
 	"fast_gin/global"
 	"fast_gin/middleware"
 	"fast_gin/models"
+	"fast_gin/service/redis_ser"
 	"fast_gin/utils/res"
 	"fmt"
 	"sync"
@@ -15,11 +16,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )
-
-type PZinfo struct {
-	PZKey     string             `json:"PZKey"`     // 购买凭证
-	GoodsInfo models.SecKillInfo `json:"GoodsInfo"` // 商品信息
-}
 
 type SecKillRequest struct {
 	Date    string `json:"date" binding:"required"`    // 秒杀日期
@@ -56,8 +52,10 @@ func (SecKillApi) SecKillView(c *gin.Context) {
 	defer lock.Unlock()
 	//如果需要分布式部署,这个地方需要改为分布式锁
 
-	key := fmt.Sprintf("sec:goods:%s", cr.Date)
+	dateStr := date.Format("2006-01-02-15") // 示例输出: 2025-06-02-12
+	key := fmt.Sprintf("sec:goods:%s", dateStr)
 	field := fmt.Sprintf("%d", cr.GoodsID)
+
 	result, err := global.Redis.HGet(context.Background(), key, field).Result()
 	if err != nil {
 		res.FailWithMsg("秒杀商品不存在", c)
@@ -76,7 +74,7 @@ func (SecKillApi) SecKillView(c *gin.Context) {
 		return
 	}
 
-	pzKey := fmt.Sprintf("sec:pz:%s:%d:%d", cr.Date, info.GoodsID, claims.UserID)
+	pzKey := fmt.Sprintf("sec:pz:%s:%d:%d", dateStr, info.GoodsID, claims.UserID)
 	_uid := global.Redis.Get(context.Background(), pzKey).Val()
 	if _uid != "" {
 		res.FailWithMsg("您已购买过该商品", c)
@@ -92,8 +90,8 @@ func (SecKillApi) SecKillView(c *gin.Context) {
 	uid := uuid.String()
 
 	global.Redis.Set(context.Background(), pzKey, uid, 15*time.Minute)
-	pzInfoByteData, _ := json.Marshal(PZinfo{
-		PZKey:     uid,
+	pzInfoByteData, _ := json.Marshal(redis_ser.PZinfo{
+		PZKey:     pzKey,
 		GoodsInfo: info,
 	})
 	global.Redis.Set(context.Background(), "sec:pz_uid:"+uid, string(pzInfoByteData), 15*time.Minute)

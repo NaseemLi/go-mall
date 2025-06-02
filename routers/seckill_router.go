@@ -30,7 +30,7 @@ func SecKillRouter(g *gin.RouterGroup) {
 			app.RemoveView)
 	}
 
-	// 前台展示：秒杀活动日历 & 秒杀商品列表
+	// 前台展示：秒杀活动时间 & 秒杀商品列表
 	{
 		g.GET("sec_kill/date",
 			app.IndexDateListView)

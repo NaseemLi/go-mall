@@ -2,10 +2,14 @@ package redisdelay
 
 import (
 	"context"
+	"encoding/json"
 	"fast_gin/global"
 	"fast_gin/models"
 	"fast_gin/models/ctype"
+	"fast_gin/service/redis_ser"
 	"fmt"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -13,7 +17,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const waitTime = 900 // 延时处理时间，单位为秒 15min=900s
+const waitTime = 30 // 延时处理时间，单位为秒 15min=900s
 const queue = "delay_order_queue"
 
 // 添加订单到延时队列
@@ -27,7 +31,7 @@ func AddOrderDelay(no string) {
 		Member: no,
 		Score:  float64(time.Now().Add(waitTime * time.Second).Unix()),
 	})
-	logrus.Infof("[延时队列] 已添加订单: %s，延迟 %d 秒执行", no, waitTime)
+	logrus.Infof("[延时队列] 已添加订单: %s,延迟 %d 秒执行", no, waitTime)
 }
 
 // 启动延时订单轮询处理
@@ -60,6 +64,8 @@ func PollOrderDelay() {
 	}
 }
 
+var lock = &sync.Mutex{}
+
 // 执行单个订单超时处理
 func OrderDelay(no string) {
 	logrus.Infof("[订单处理] 开始处理订单: %s", no)
@@ -77,8 +83,53 @@ func OrderDelay(no string) {
 		return
 	}
 
+	lock.Lock()
+	defer lock.Unlock()
+
 	// 执行订单超时事务处理
 	err = global.DB.Transaction(func(tx *gorm.DB) error {
+		if model.PzKey != "" {
+			//秒杀订单,商品-1
+			pzUidKey := fmt.Sprintf("sec:pz_uid:%s", model.PzKey)
+			val := global.Redis.Get(context.Background(), pzUidKey).Val()
+			if val == "" {
+				logrus.Warnf("[订单处理] 秒杀商品已经过期: %s", no)
+				return nil
+			}
+
+			var pzInfo redis_ser.PZinfo
+			err = json.Unmarshal([]byte(val), &pzInfo)
+			if err != nil {
+				logrus.Warnf("[订单处理] 秒杀凭证信息解析失败: %s", no)
+				return nil
+			}
+			_list := strings.Split(pzInfo.PZKey, ":")
+			if len(_list) != 5 {
+				logrus.Warnf("[订单处理] pzKey 结构非法，长度异常：%s", pzInfo.PZKey)
+				return err
+			}
+			date := _list[2]
+			field := _list[3]
+
+			hashKey := fmt.Sprintf("sec:goods:%s", date)
+			val = global.Redis.HGet(context.Background(), hashKey, field).Val()
+			if val == "" {
+				logrus.Infof("[订单处理] 秒杀商品已经过期: %s", no)
+				return nil
+			}
+
+			var info models.SecKillInfo
+			err = json.Unmarshal([]byte(val), &info)
+			if err != nil {
+				logrus.Warnf("[订单处理] 秒杀商品信息解析失败: %s", no)
+				return nil
+			}
+			info.BuyNum--
+			byteData, _ := json.Marshal(info)
+			global.Redis.HSet(context.Background(), hashKey, field, string(byteData))
+
+			return nil
+		}
 		// 更新订单状态
 		tx.Model(&model).Update("status", 7)
 		logrus.Infof("[订单处理] 订单标记为超时: %s", no)
