@@ -5,6 +5,7 @@ import (
 	"fast_gin/models"
 	"fast_gin/models/ctype"
 	"fast_gin/utils/res"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,13 +24,15 @@ type StatisticsSystemResponse struct {
 
 func (DataApi) StatisticsSystemView(c *gin.Context) {
 	var data StatisticsSystemResponse
+	loc, _ := time.LoadLocation("Asia/Shanghai")
+	today := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), 0, 0, 0, 0, loc)
+	tomorrow := today.Add(24 * time.Hour)
 
 	global.DB.Model(models.UserModel{}).Count(&data.UserNum)
 	global.DB.Model(models.GoodsModel{}).Where("status = ?", ctype.GoodsStatusTop).Count(&data.GoodsNum)
 	global.DB.Model(models.SecKillModel{}).Count(&data.SecKillNum)
 	global.DB.Model(models.OrderModel{}).Where("status not in ?", []int8{1, 6, 7}).Count(&data.SussessOrderNum)
-	//TODO:今日的登录数据
-	global.DB.Model(models.UserLoginModel{}).Where("date(created_at) = date(now())").Count(&data.NewLoginCount)
+	global.DB.Debug().Model(models.UserLoginModel{}).Where("created_at >= ? AND created_at < ?", today, tomorrow).Count(&data.NewLoginCount)
 
 	var orderList []models.OrderModel
 	global.DB.Find(&orderList)
