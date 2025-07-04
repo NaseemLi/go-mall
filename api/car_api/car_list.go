@@ -77,7 +77,8 @@ func (CarApi) CarListView(c *gin.Context) {
 	var couponList []models.UserCouponModel
 	global.DB.
 		Preload("CouponModel").
-		Find(&couponList, "user_id = ? AND status = ? AND end_time > now()", claims.UserID, ctype.CouponStatusNotUsed)
+		Find(&couponList, "user_id = ? AND status = ? AND end_time > now()",
+			claims.UserID, ctype.CouponStatusNotUsed)
 
 	var useCouponMap = map[uint]bool{}
 	for _, v := range cr.CouponIDList {
@@ -147,7 +148,8 @@ func (CarApi) CarListView(c *gin.Context) {
 		if goods.Used {
 			//判断这个商品有没有可用的商品优惠卷
 			for _, info := range goodsCouponList {
-				if info.Used && info.Type == ctype.CouponGoodsType && *info.GoodsID == v.GoodsID && info.Threshold <= goods.TotalPrice {
+				if info.Used && info.Type == ctype.CouponGoodsType &&
+					*info.GoodsID == v.GoodsID && info.Threshold <= goods.TotalPrice {
 					//我选择的商品优惠卷,我也选择了对应的商品
 					if goods.CouponInfo != nil {
 						goods.CouponInfo.Used = true
